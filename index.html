@@ -3932,6 +3932,15 @@
       total,
     };
     saveOrder(order);
+    if(typeof supabaseClient !== 'undefined'){
+      supabaseClient.from('orders').insert({
+        email, phone, address,
+        items: cart,
+        total,
+      }).then(({error}) => {
+        if(error) console.error('Error guardando el pedido en Supabase:', error);
+      });
+    }
 
     // Envía automáticamente un correo a Gmail con los datos del pedido (sin que el cliente haga nada)
     if(window.emailjs && EMAILJS_SERVICE_ID && EMAILJS_TEMPLATE_ID){
