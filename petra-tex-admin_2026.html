@@ -1022,74 +1022,74 @@
   }
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  // ===== Almacén de productos: IndexedDB (mucho más espacio que localStorage, soporta miles de prendas) =====
-  const DB_NAME = 'petraTexDB';
-  const DB_VERSION = 1;
-  const STORE_NAME = 'products';
-  const LEGACY_STORAGE_KEY = 'petraTexProducts';
+  // ===== Almacén de productos: Supabase (base de datos en la nube, compartida por todos los dispositivos) =====
+  const SUPABASE_URL = 'https://ortnsekmoxnxxyklxcsr.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_uGJm-mdrUHz3qVpjvVRZzg_cg0BgZfO';
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('petraTexSync') : null;
 
-  function dbOpen(){
-    return new Promise((resolve, reject) => {
-      const req = indexedDB.open(DB_NAME, DB_VERSION);
-      req.onupgradeneeded = () => {
-        const db = req.result;
-        if(!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, { keyPath: 'id' });
-      };
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
+  // Convierte un producto del formato de la app (camelCase) al formato de la tabla de Supabase (snake_case)
+  function toSupabaseRow(p){
+    return {
+      id: p.id,
+      name: p.name,
+      images: p.images || [],
+      image: p.image || '',
+      price: p.price,
+      price_old: p.priceOld,
+      category: p.category,
+      colors: p.colors || [],
+      sizes: p.sizes || [],
+      material: p.material || '',
+      temporada: p.temporada || '',
+      details: p.details || '',
+      stock: p.stock || 0,
+      sales: p.sales || 0,
+    };
   }
+  function fromSupabaseRow(row){
+    return {
+      id: row.id,
+      name: row.name,
+      images: row.images || [],
+      image: row.image || (row.images && row.images[0]) || '',
+      price: row.price,
+      priceOld: row.price_old,
+      category: row.category,
+      colors: row.colors || [],
+      sizes: row.sizes || [],
+      material: row.material || '',
+      temporada: row.temporada || '',
+      details: row.details || '',
+      stock: row.stock || 0,
+      sales: row.sales || 0,
+    };
+  }
+
   async function dbGetAll(){
-    const db = await dbOpen();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, 'readonly');
-      const req = tx.objectStore(STORE_NAME).getAll();
-      req.onsuccess = () => resolve(req.result || []);
-      req.onerror = () => reject(req.error);
-    });
+    const { data, error } = await supabaseClient.from('products').select('*').order('created_at', { ascending: true });
+    if(error){ console.error('Error cargando productos de Supabase:', error); return []; }
+    return (data || []).map(fromSupabaseRow);
   }
   async function dbPut(product){
-    const db = await dbOpen();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, 'readwrite');
-      tx.objectStore(STORE_NAME).put(product);
-      tx.oncomplete = () => resolve(true);
-      tx.onerror = () => reject(tx.error);
-    });
+    const { error } = await supabaseClient.from('products').upsert(toSupabaseRow(product));
+    if(error){ console.error('Error guardando producto en Supabase:', error); throw error; }
+    return true;
   }
   async function dbDelete(id){
-    const db = await dbOpen();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, 'readwrite');
-      tx.objectStore(STORE_NAME).delete(id);
-      tx.oncomplete = () => resolve(true);
-      tx.onerror = () => reject(tx.error);
-    });
+    const { error } = await supabaseClient.from('products').delete().eq('id', id);
+    if(error){ console.error('Error borrando producto en Supabase:', error); throw error; }
+    return true;
   }
   async function dbPutAll(productsArray){
-    const db = await dbOpen();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, 'readwrite');
-      const store = tx.objectStore(STORE_NAME);
-      productsArray.forEach(p => store.put(p));
-      tx.oncomplete = () => resolve(true);
-      tx.onerror = () => reject(tx.error);
-    });
+    const { error } = await supabaseClient.from('products').upsert(productsArray.map(toSupabaseRow));
+    if(error){ console.error('Error importando productos a Supabase:', error); throw error; }
+    return true;
   }
-  // Migra el catálogo antiguo guardado en localStorage (si existe) al nuevo almacén, una sola vez
-  async function migrateLegacyStorage(){
-    try{
-      const raw = localStorage.getItem(LEGACY_STORAGE_KEY);
-      if(!raw) return;
-      const legacyProducts = JSON.parse(raw) || [];
-      if(legacyProducts.length) await dbPutAll(legacyProducts);
-      localStorage.removeItem(LEGACY_STORAGE_KEY); // libera ese espacio, ya no se usa
-    }catch(e){
-      console.error('No se pudo migrar el catálogo antiguo', e);
-    }
-  }
+  // Ya no hace falta migrar nada de localStorage/IndexedDB: los datos viven en Supabase
+  async function migrateLegacyStorage(){ /* no-op */ }
   function notifyProductsChanged(){
     if(syncChannel) syncChannel.postMessage('changed');
   }
