@@ -487,6 +487,46 @@
   }
   .backup-btn:hover{border-color:var(--orange);color:var(--orange);}
 
+  /* ===== MODAL PEDIDOS ===== */
+  .orders-box{
+    background:#fff;
+    border-radius:14px;
+    width:640px;max-width:92vw;
+    max-height:85vh;
+    display:flex;flex-direction:column;
+    box-shadow:0 12px 40px rgba(0,0,0,.3);
+  }
+  .orders-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 22px;
+    border-bottom:1px solid var(--gray-border);
+  }
+  .orders-header h2{font-size:17px;}
+  .orders-close{font-size:16px;color:var(--gray-text);cursor:pointer;}
+  .orders-list{overflow-y:auto;padding:16px 22px;display:flex;flex-direction:column;gap:14px;}
+  .order-card{
+    border:1px solid var(--gray-border);
+    border-radius:10px;
+    padding:14px 16px;
+  }
+  .order-card .o-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .order-card .o-date{font-size:12px;color:var(--gray-text);}
+  .order-card .o-total{font-weight:800;color:var(--orange);}
+  .order-card .o-line{font-size:13px;color:var(--black);margin-bottom:3px;}
+  .order-card .o-items{font-size:12.5px;color:var(--gray-text);white-space:pre-wrap;margin:8px 0;}
+  .order-card .o-wa-btn{
+    margin-top:8px;
+    display:inline-flex;align-items:center;gap:6px;
+    background:#25D366;color:#fff;
+    border-radius:8px;
+    padding:8px 14px;
+    font-size:13px;font-weight:700;
+  }
+  .order-card .o-wa-btn:hover{opacity:.9;}
+  .order-card .o-wa-btn.sent{background:#B9B9B9;}
+  .orders-empty{text-align:center;color:var(--gray-text);padding:40px 10px;font-size:13.5px;}
+
+
   /* ===== MODAL CAMBIAR CONTRASEÑA ===== */
   .change-pass-overlay{
     position:fixed;inset:0;
@@ -583,12 +623,24 @@
     <div class="title">Panel de administración · Gestión de catálogo</div>
     <a href="index.html" class="back">← Volver a la tienda</a>
     <a href="petra-tex-almacen_2026.html" class="back">📦 Almacén</a>
+    <button type="button" class="backup-btn" id="openOrdersBtn">🧾 Pedidos</button>
     <button type="button" class="backup-btn" id="exportBackupBtn">⬇️ Exportar copia de seguridad</button>
     <button type="button" class="backup-btn" id="importBackupBtn">⬆️ Importar copia de seguridad</button>
     <input type="file" id="importBackupFile" accept="application/json,.json" style="display:none;">
     <button type="button" class="logout-btn" id="changePasswordBtn">🔑 Cambiar contraseña</button>
     <button type="button" class="logout-btn" id="logoutBtn">🔒 Cerrar sesión</button>
   </header>
+
+  <!-- ===== MODAL PEDIDOS ===== -->
+  <div class="change-pass-overlay" id="ordersOverlay">
+    <div class="orders-box">
+      <div class="orders-header">
+        <h2>🧾 Pedidos recibidos</h2>
+        <button type="button" class="orders-close" id="ordersCloseBtn">✕</button>
+      </div>
+      <div class="orders-list" id="ordersList">Cargando pedidos…</div>
+    </div>
+  </div>
 
   <!-- ===== MODAL CAMBIAR CONTRASEÑA ===== -->
   <div class="change-pass-overlay" id="changePassOverlay">
@@ -965,6 +1017,66 @@
   changePassOverlay.addEventListener('click', (e) => {
     if(e.target === changePassOverlay) closeChangePassModal();
   });
+
+  // ===== Pedidos y WhatsApp de agradecimiento =====
+  const STORE_CONTACT_PHONE = '+212 700 7000 60'; // 📌 número de WhatsApp de la tienda (solo referencia)
+  const ordersOverlay = document.getElementById('ordersOverlay');
+  const ordersList = document.getElementById('ordersList');
+  const openOrdersBtn = document.getElementById('openOrdersBtn');
+  const ordersCloseBtn = document.getElementById('ordersCloseBtn');
+
+  function waThankYouMessage(order){
+    return `¡Hola! 🧡 Gracias por tu compra en PETRA TEX. Hemos recibido tu pedido por ${order.total} DH y lo estamos preparando. Te avisaremos en cuanto salga hacia tu dirección. ¡Gracias por confiar en nosotros!`;
+  }
+
+  async function loadOrdersList(){
+    ordersList.innerHTML = 'Cargando pedidos…';
+    const { data, error } = await supabaseClient.from('orders').select('*').order('created_at', { ascending: false }).limit(50);
+    if(error){
+      ordersList.innerHTML = `<div class="orders-empty">No se pudieron cargar los pedidos.<br>${error.message || ''}</div>`;
+      return;
+    }
+    if(!data || !data.length){
+      ordersList.innerHTML = `<div class="orders-empty">Todavía no ha llegado ningún pedido.</div>`;
+      return;
+    }
+    ordersList.innerHTML = data.map(o => {
+      const fecha = new Date(o.created_at).toLocaleString('es-ES', {dateStyle:'medium', timeStyle:'short'});
+      const itemsText = (o.items || []).map(i => `${i.name}${i.color ? ' / ' + i.color : ''}${i.size ? ' / ' + i.size : ''} x${i.qty}`).join('\n');
+      const phoneDigits = (o.phone || '').replace(/[^0-9]/g,'');
+      const waUrl = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(waThankYouMessage(o))}`;
+      return `
+        <div class="order-card">
+          <div class="o-top">
+            <span class="o-date">${fecha}</span>
+            <span class="o-total">${o.total} DH</span>
+          </div>
+          <div class="o-line">📧 ${o.email || '—'}</div>
+          <div class="o-line">📞 ${o.phone || '—'}</div>
+          <div class="o-line">📍 ${o.address || '—'}</div>
+          <div class="o-items">${itemsText}</div>
+          <a class="o-wa-btn ${o.notified ? 'sent' : ''}" href="${waUrl}" target="_blank" rel="noopener" onclick="markOrderNotified(${o.id})">
+            ${o.notified ? '✓ Ya enviado' : '💬 Enviar WhatsApp de agradecimiento'}
+          </a>
+        </div>`;
+    }).join('');
+  }
+
+  async function markOrderNotified(orderId){
+    await supabaseClient.from('orders').update({ notified: true }).eq('id', orderId);
+  }
+  window.markOrderNotified = markOrderNotified;
+
+  function openOrdersModal(){
+    ordersOverlay.classList.add('show');
+    loadOrdersList();
+  }
+  function closeOrdersModal(){
+    ordersOverlay.classList.remove('show');
+  }
+  if(openOrdersBtn) openOrdersBtn.addEventListener('click', openOrdersModal);
+  if(ordersCloseBtn) ordersCloseBtn.addEventListener('click', closeOrdersModal);
+  if(ordersOverlay) ordersOverlay.addEventListener('click', (e) => { if(e.target === ordersOverlay) closeOrdersModal(); });
 
   cpSaveBtn.addEventListener('click', () => {
     cpError.classList.remove('show');
