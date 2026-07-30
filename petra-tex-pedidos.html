@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PETRA - Pedidos recibidos</title>
+<style>
+  :root{
+    --orange:#FF6A00;
+    --orange-dark:#E85A00;
+    --black:#111111;
+    --gray-text:#767676;
+    --gray-border:#E5E5E5;
+    --bg:#F7F7F7;
+    --green:#1B9A5B;
+    --red:#D6362B;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:"Helvetica Neue",Arial,sans-serif;}
+  body{background:var(--bg);color:var(--black);}
+  a{text-decoration:none;color:inherit;}
+  button{cursor:pointer;border:none;font-family:inherit;}
+  input,select,textarea{font-family:inherit;}
+
+  /* HEADER */
+  header{
+    background:#111;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 28px;
+    flex-wrap:wrap;
+    row-gap:10px;
+  }
+  header .logo{display:flex;align-items:center;gap:10px;}
+  header .logo .mark{
+    width:34px;height:34px;background:var(--orange);border-radius:8px;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;
+  }
+  header .logo .name{font-weight:800;font-size:16px;letter-spacing:.5px;}
+  header .title{font-size:14px;color:#bdbdbd;}
+  header .back{
+    background:transparent;
+    color:#fff;
+    border:1px solid #444;
+    padding:8px 16px;
+    border-radius:20px;
+    font-size:13px;
+    font-weight:600;
+  }
+  header .back:hover{border-color:var(--orange);color:var(--orange);}
+  .logout-btn{
+    background:transparent;
+    border:1px solid #444;
+    color:#fff;
+    font-size:12.5px;
+    font-weight:700;
+    padding:8px 14px;
+    border-radius:8px;
+    margin-left:10px;
+  }
+  .logout-btn:hover{border-color:var(--red);color:var(--red);}
+
+  .page-wrap{max-width:760px;margin:0 auto;padding:24px 16px 60px;}
+  #pedidosContent{display:none;}
+
+  /* ===== PANTALLA DE ACCESO (contraseña) ===== */
+  .lock-screen{
+    position:fixed;inset:0;
+    background:#111;
+    display:flex;align-items:center;justify-content:center;
+    z-index:500;
+  }
+  .lock-box{
+    background:#fff;
+    border-radius:12px;
+    padding:36px 32px;
+    width:100%;
+    max-width:340px;
+    text-align:center;
+  }
+  .lock-box .mark{
+    width:52px;height:52px;
+    background:var(--orange);
+    border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    margin:0 auto 16px;
+  }
+  .lock-box h2{font-size:17px;margin-bottom:6px;}
+  .lock-box p{font-size:13px;color:var(--gray-text);margin-bottom:18px;}
+  .lock-box input{
+    width:100%;
+    padding:12px 14px;
+    border:1.5px solid var(--gray-border);
+    border-radius:8px;
+    font-size:14px;
+    margin-bottom:10px;
+    text-align:center;
+    letter-spacing:1px;
+  }
+  .lock-box input:focus{outline:none;border-color:var(--orange);}
+  .lock-box button{
+    width:100%;
+    background:var(--orange);
+    color:#fff;
+    font-weight:700;
+    padding:12px;
+    border-radius:8px;
+    font-size:14px;
+  }
+  .lock-box button:hover{background:var(--orange-dark);}
+  .lock-error{
+    color:var(--red);
+    font-size:12.5px;
+    margin-bottom:10px;
+    display:none;
+  }
+  .lock-error.show{display:block;}
+  .lock-forgot{
+    display:block;
+    margin-top:14px;
+    font-size:12.5px;
+    color:var(--gray-text);
+    text-decoration:underline;
+  }
+  .lock-forgot:hover{color:var(--orange);}
+
+  /* ===== LISTA DE PEDIDOS ===== */
+  .orders-list{display:flex;flex-direction:column;gap:10px;}
+  .order-card{
+    background:#fff;
+    border:1px solid var(--gray-border);
+    border-radius:8px;
+    padding:12px 14px;
+  }
+  .order-card .o-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+  .order-card .o-date{font-size:11px;color:var(--gray-text);}
+  .order-card .o-total{font-size:14px;font-weight:800;color:var(--orange);}
+  .order-card .o-line{font-size:12px;color:var(--black);margin-bottom:2px;}
+  .order-card .o-items{font-size:11.5px;color:var(--gray-text);white-space:pre-wrap;margin:6px 0;}
+  .order-card .o-wa-btn{
+    margin-top:4px;
+    display:inline-flex;align-items:center;gap:4px;
+    background:#25D366;color:#fff;
+    border-radius:6px;
+    padding:6px 10px;
+    font-size:11.5px;font-weight:700;
+  }
+  .order-card .o-wa-btn:hover{opacity:.9;}
+  .order-card .o-wa-btn.sent{background:#B9B9B9;}
+  .order-card .o-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .order-card .o-del-btn{
+    margin-top:4px;
+    display:inline-flex;align-items:center;gap:4px;
+    background:#fff;color:#D33B3B;
+    border:1px solid #D33B3B;
+    border-radius:6px;
+    padding:6px 10px;
+    font-size:11.5px;font-weight:700;
+  }
+  .order-card .o-del-btn:hover{background:#D33B3B;color:#fff;}
+  .orders-empty{text-align:center;color:var(--gray-text);padding:50px 10px;font-size:13px;}
+  .order-card .o-repartidor-row{
+    display:flex;align-items:center;gap:6px;margin:6px 0 2px;
+  }
+  .order-card .o-repartidor-row label{
+    font-size:10.5px;font-weight:700;color:var(--gray-text);white-space:nowrap;
+  }
+  .order-card .o-repartidor-input{
+    flex:1;padding:6px 8px;border:1.5px solid var(--gray-border);border-radius:6px;font-size:12px;outline:none;
+  }
+  .order-card .o-repartidor-input:focus{border-color:var(--orange);}
+  .order-card .o-wa-repartidor-btn{
+    margin-top:4px;
+    display:inline-flex;align-items:center;gap:4px;
+    background:#075E54;color:#fff;
+    border-radius:6px;
+    padding:6px 10px;
+    font-size:11.5px;font-weight:700;
+  }
+  .order-card .o-wa-repartidor-btn:hover{opacity:.9;}
+  .order-card .o-phone-wrap{
+    flex:1;display:flex;align-items:center;
+    border:1.5px solid var(--gray-border);border-radius:6px;overflow:hidden;background:#fff;
+  }
+  .order-card .o-phone-wrap:focus-within{border-color:var(--orange);}
+  .order-card .o-phone-prefix{
+    padding:6px 6px 6px 8px;font-size:12px;font-weight:700;color:var(--gray-text);
+    background:#F3F3F3;border-right:1.5px solid var(--gray-border);white-space:nowrap;
+  }
+  .order-card .o-phone-input{
+    flex:1;min-width:0;padding:6px 8px 6px 6px;border:none;font-size:12px;outline:none;background:transparent;
+  }
+  .order-card .o-map-row{
+    display:flex;align-items:center;gap:6px;margin:6px 0 2px;
+  }
+  .order-card .o-map-row label{
+    font-size:10.5px;font-weight:700;color:var(--gray-text);white-space:nowrap;
+  }
+  .order-card .o-map-link{
+    margin-top:4px;
+    display:inline-flex;align-items:center;gap:4px;
+    background:#1a73e8;color:#fff;
+    border-radius:6px;
+    padding:6px 10px;
+    font-size:11.5px;font-weight:700;
+  }
+  .order-card .o-map-link:hover{opacity:.9;}
+  .order-card .o-recogida-btn{
+    margin-top:4px;
+    display:inline-flex;align-items:center;gap:4px;
+    background:#5B3A29;color:#fff;
+    border-radius:6px;
+    padding:6px 10px;
+    font-size:11.5px;font-weight:700;
+  }
+  .order-card .o-recogida-btn:hover{opacity:.9;}
+  .order-card .o-receipt-btn{
+    margin-top:4px;
+    display:inline-flex;align-items:center;gap:4px;
+    background:#fff;color:var(--black);
+    border:1px solid var(--black);
+    border-radius:6px;
+    padding:6px 10px;
+    font-size:11.5px;font-weight:700;
+  }
+  .order-card .o-receipt-btn:hover{background:var(--black);color:#fff;}
+
+  /* ===== MODAL RECIBO ===== */
+  .receipt-overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.6);
+    display:none;
+    align-items:center;justify-content:flex-end;
+    z-index:900;
+    padding:20px;
+  }
+  .receipt-overlay.show{display:flex;}
+  .receipt-box{
+    background:transparent;
+    border-radius:12px;
+    width:min(94vw,440px);
+    max-height:96vh;
+    overflow-y:auto;
+    padding:0;
+    position:relative;
+  }
+  .receipt-close{
+    position:absolute;
+    top:8px;right:8px;
+    width:28px;height:28px;
+    border-radius:50%;
+    background:#fff;
+    color:var(--black);
+    font-size:14px;
+    display:flex;align-items:center;justify-content:center;
+    z-index:2;
+  }
+  .receipt-inner{background:#fff;padding:30px 24px;border-radius:12px;}
+  .receipt-inner.printing{
+    animation:receiptToPrinter .7s ease forwards;
+  }
+  @keyframes receiptToPrinter{
+    0%{transform:translateY(0) scale(1);opacity:1;}
+    100%{transform:translateY(70px) scale(.82);opacity:.25;}
+  }
+  .printer-icon-wrap{
+    display:flex;align-items:center;justify-content:center;
+    height:0;overflow:visible;
+    position:relative;
+  }
+  .printer-icon-wrap .printer-icon{
+    font-size:34px;
+    opacity:0;
+    transform:translateY(-20px) scale(.7);
+    transition:opacity .3s ease, transform .3s ease;
+  }
+  .printer-icon-wrap .printer-icon.active{
+    opacity:1;
+    transform:translateY(-30px) scale(1);
+  }
+  .receipt-inner .r-header{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:6px;text-align:center;}
+  .receipt-inner .r-mark{width:48px;height:48px;background:var(--orange);border-radius:10px;display:flex;align-items:center;justify-content:center;}
+  .receipt-inner .r-name{font-weight:800;font-size:23px;letter-spacing:.5px;}
+  .receipt-inner .r-sub{font-size:14px;color:var(--gray-text);text-align:center;margin-bottom:22px;}
+  .receipt-inner .r-divider{border-top:1px dashed #999;margin:20px 0;}
+  .receipt-inner .r-row{display:flex;justify-content:space-between;gap:10px;font-size:15px;margin-bottom:14px;}
+  .receipt-inner .r-label{color:var(--gray-text);white-space:nowrap;}
+  .receipt-inner .r-val{text-align:right;word-break:break-word;}
+  .receipt-inner table{width:100%;border-collapse:collapse;font-size:14.5px;margin:16px 0;}
+  .receipt-inner th{text-align:left;font-size:13px;color:var(--gray-text);padding-bottom:10px;border-bottom:1px dashed #999;}
+  .receipt-inner td{padding:12px 0;border-bottom:1px dashed #ddd;vertical-align:top;}
+  .receipt-inner .r-total{display:flex;justify-content:space-between;font-size:18px;font-weight:800;margin-top:20px;}
+  .receipt-inner .r-total .amount{color:var(--orange);}
+  .receipt-inner .r-footer{margin-top:26px;text-align:center;font-size:13px;color:#999;}
+  .receipt-print-btn{display:block;width:100%;margin-top:22px;background:#111;color:#fff;border:none;padding:15px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;}
+  @media print{
+    body *{visibility:hidden !important;}
+    .receipt-overlay, .receipt-overlay *{visibility:visible !important;}
+    .receipt-overlay{
+      position:absolute !important;top:0 !important;left:0 !important;
+      inset:auto !important;
+      width:100% !important;
+      background:none !important;padding:0 !important;
+      display:block !important;
+    }
+    .receipt-box{
+      position:static !important;
+      box-shadow:none !important;max-height:none !important;overflow:visible !important;
+      width:100% !important;background:#fff !important;
+      border-radius:0 !important;
+    }
+    .receipt-close,.receipt-print-btn{display:none !important;}
+    .printer-icon-wrap{display:none !important;}
+    .receipt-inner{padding:5px 6px !important;border-radius:0 !important;}
+    .receipt-inner .r-mark{width:28px !important;height:28px !important;}
+    .receipt-inner .r-name{font-size:13px !important;}
+    .receipt-inner .r-sub{font-size:9.5px !important;margin-bottom:8px !important;}
+    .receipt-inner .r-divider{margin:6px 0 !important;}
+    .receipt-inner .r-row{font-size:9.5px !important;margin-bottom:5px !important;}
+    .receipt-inner table{font-size:9.5px !important;margin:6px 0 !important;}
+    .receipt-inner th{font-size:8.5px !important;padding-bottom:3px !important;}
+    .receipt-inner td{padding:4px 0 !important;}
+    .receipt-inner .r-total{font-size:11px !important;margin-top:6px !important;}
+    .receipt-inner .r-footer{font-size:8.5px !important;margin-top:8px !important;}
+  }
+  @page{ size:58mm auto; margin:0; }
+</style>
+</head>
+<body>
+
+  <!-- ===== PANTALLA DE ACCESO ===== -->
+  <div class="lock-screen" id="lockScreen">
+    <div class="lock-box">
+      <div class="mark">
+        <svg viewBox="0 0 48 48" width="30" height="30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 15h14l-1.4 15.5a2 2 0 0 1-2 1.8H12.4a2 2 0 0 1-2-1.8L9 15z" fill="#fff" opacity=".85"/>
+          <path d="M13 15v-2.5a3 3 0 0 1 3-3h1a3 3 0 0 1 3 3V15" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>
+          <path d="M20 20h16l-1.6 17.5a2 2 0 0 1-2 1.8H23.6a2 2 0 0 1-2-1.8L20 20z" fill="#fff"/>
+          <path d="M24.5 20v-2.8a3.5 3.5 0 0 1 3.5-3.5h1a3.5 3.5 0 0 1 3.5 3.5V20" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2>Acceso a Pedidos</h2>
+      <p>Introduce la contraseña del panel de administración.</p>
+      <div class="lock-error" id="lockError">Contraseña incorrecta.</div>
+      <input type="password" id="lockPassword" placeholder="Contraseña" autocomplete="off">
+      <button type="button" id="lockSubmit">Entrar</button>
+      <a href="petra-tex-admin_2026.html" class="lock-forgot">¿Olvidaste tu contraseña? Recupérala desde el panel</a>
+    </div>
+  </div>
+
+  <div id="pedidosContent">
+
+  <header>
+    <div class="logo">
+      <div class="mark">
+        <svg viewBox="0 0 48 48" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 15h14l-1.4 15.5a2 2 0 0 1-2 1.8H12.4a2 2 0 0 1-2-1.8L9 15z" fill="#fff" opacity=".85"/>
+          <path d="M13 15v-2.5a3 3 0 0 1 3-3h1a3 3 0 0 1 3 3V15" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>
+          <path d="M20 20h16l-1.6 17.5a2 2 0 0 1-2 1.8H23.6a2 2 0 0 1-2-1.8L20 20z" fill="#fff"/>
+          <path d="M24.5 20v-2.8a3.5 3.5 0 0 1 3.5-3.5h1a3.5 3.5 0 0 1 3.5 3.5V20" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="name">PETRA</div>
+    </div>
+    <div class="title">🧾 Pedidos recibidos</div>
+    <button type="button" class="logout-btn" id="logoutBtn">🔒 Cerrar sesión</button>
+  </header>
+
+  <div class="page-wrap">
+    <div class="orders-list" id="ordersList">Cargando pedidos…</div>
+  </div>
+
+  </div>
+
+  <!-- ===== MODAL RECIBO ===== -->
+  <div class="receipt-overlay" id="receiptOverlay">
+    <div class="receipt-box">
+      <button type="button" class="receipt-close" id="receiptCloseBtn">✕</button>
+      <div id="receiptContent"></div>
+      <div class="printer-icon-wrap"><span class="printer-icon" id="printerIcon">🖨️</span></div>
+    </div>
+  </div>
+
+<script>
+  // ===== Control de acceso por contraseña (comparte contraseña con el panel de administración) =====
+  const ADMIN_PASSWORD_DEFAULT = 'hamioui390719';
+  const PASSWORD_KEY = 'petraTexAdminPassword';
+  function getAdminPassword(){
+    return localStorage.getItem(PASSWORD_KEY) || ADMIN_PASSWORD_DEFAULT;
+  }
+  const AUTH_KEY = 'petraTexAdminAuth';
+
+  const lockScreen = document.getElementById('lockScreen');
+  const pedidosContent = document.getElementById('pedidosContent');
+  const lockPassword = document.getElementById('lockPassword');
+  const lockError = document.getElementById('lockError');
+  const lockSubmit = document.getElementById('lockSubmit');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  function showPedidos(){
+    lockScreen.style.display = 'none';
+    pedidosContent.style.display = 'block';
+    loadOrdersList();
+  }
+  function showLock(){
+    lockScreen.style.display = 'flex';
+    pedidosContent.style.display = 'none';
+    lockPassword.value = '';
+    lockError.classList.remove('show');
+    lockPassword.focus();
+  }
+  function tryLogin(){
+    if(lockPassword.value === getAdminPassword()){
+      sessionStorage.setItem(AUTH_KEY, 'ok');
+      showPedidos();
+    } else {
+      lockError.classList.add('show');
+    }
+  }
+  lockSubmit.addEventListener('click', tryLogin);
+  lockPassword.addEventListener('keydown', (e) => { if(e.key === 'Enter') tryLogin(); });
+  logoutBtn.addEventListener('click', () => {
+    sessionStorage.removeItem(AUTH_KEY);
+    showLock();
+  });
+
+  // ===== Pedidos y WhatsApp de agradecimiento =====
+  const STORE_CONTACT_PHONE = '+212 700 7000 60'; // 📌 número de WhatsApp de la tienda (solo referencia)
+  const ordersList = document.getElementById('ordersList');
+  const receiptOverlay = document.getElementById('receiptOverlay');
+  const receiptContent = document.getElementById('receiptContent');
+  const receiptCloseBtn = document.getElementById('receiptCloseBtn');
+
+  const WA_THANK_YOU_TEXTS = {
+    es: (nombre) => `${nombre ? `¡Hola ${nombre}!` : '¡Hola!'} 🧡 Gracias por tu compra en PETRA. Hemos recibido tu pedido por TOTAL DH y lo estamos preparando. Te avisaremos en cuanto salga hacia tu dirección. Si tienes cualquier consulta o quieres saber dónde ha llegado tu pedido, llámanos a este número: \u2066${STORE_CONTACT_PHONE}\u2069. ¡Gracias por confiar en nosotros!`,
+    en: (nombre) => `${nombre ? `Hi ${nombre}!` : 'Hello!'} 🧡 Thank you for your purchase at PETRA. We've received your order for TOTAL DH and we're preparing it now. We'll let you know as soon as it's on its way to you. If you have any questions or want to know where your order is, call us at: \u2066${STORE_CONTACT_PHONE}\u2069. Thanks for trusting us!`,
+    fr: (nombre) => `${nombre ? `Bonjour ${nombre} !` : 'Bonjour !'} 🧡 Merci pour votre achat chez PETRA. Nous avons bien reçu votre commande de TOTAL DH et nous la préparons. Nous vous prévenons dès qu'elle part vers votre adresse. Pour toute question ou pour savoir où en est votre commande, appelez-nous au : \u2066${STORE_CONTACT_PHONE}\u2069. Merci pour votre confiance !`,
+    ar: (nombre) => `${nombre ? `مرحباً ${nombre}!` : 'مرحباً!'} 🧡 شكراً لشرائك من PETRA. لقد استلمنا طلبك بمبلغ TOTAL درهم ونحن نجهزه الآن. سنخبرك بمجرد إرساله إلى عنوانك. لأي استفسار أو لمعرفة مكان طلبك، اتصل بنا على هذا الرقم: \u2066${STORE_CONTACT_PHONE}\u2069. شكراً لثقتك بنا!`,
+  };
+
+  function waThankYouMessage(order){
+    const nombre = order.first_name ? order.first_name : '';
+    const lang = order.lang && WA_THANK_YOU_TEXTS[order.lang] ? order.lang : 'es';
+    return WA_THANK_YOU_TEXTS[lang](nombre).replace('TOTAL', order.total);
+  }
+
+  // ===== WhatsApp al repartidor (entrega al cliente) =====
+  let currentOrders = []; // últimos pedidos cargados, para poder armar el mensaje al repartidor
+
+  function repartidorKey(orderId){
+    return `petra_repartidor_phone_${orderId}`;
+  }
+  function getRepartidorPhone(orderId){
+    return localStorage.getItem(repartidorKey(orderId)) || '';
+  }
+  function saveRepartidorPhone(orderId, value){
+    const v = (value || '').trim();
+    const digits = v.replace(/[^0-9]/g,'');
+    localStorage.setItem(repartidorKey(orderId), digits.length >= 8 ? v : '');
+  }
+  window.saveRepartidorPhone = saveRepartidorPhone;
+
+  // ===== Repartidor de RECOGIDA (proveedor -> almacén) =====
+  const WAREHOUSE_ADDRESS = 'Almacén Petra Tex, Tetuán'; // 📌 cambia esto por la dirección real de tu almacén
+
+  function recogidaKey(orderId){
+    return `petra_recogida_phone_${orderId}`;
+  }
+  function getRecogidaPhone(orderId){
+    return localStorage.getItem(recogidaKey(orderId)) || '';
+  }
+  function saveRecogidaPhone(orderId, value){
+    const v = (value || '').trim();
+    const digits = v.replace(/[^0-9]/g,'');
+    localStorage.setItem(recogidaKey(orderId), digits.length >= 8 ? v : '');
+  }
+  window.saveRecogidaPhone = saveRecogidaPhone;
+
+  function proveedorDirKey(orderId){
+    return `petra_proveedor_direccion_${orderId}`;
+  }
+  function getProveedorDireccion(orderId){
+    return localStorage.getItem(proveedorDirKey(orderId)) || '';
+  }
+  function saveProveedorDireccion(orderId, value){
+    localStorage.setItem(proveedorDirKey(orderId), (value || '').trim());
+  }
+  window.saveProveedorDireccion = saveProveedorDireccion;
+
+  function openProveedorMap(orderId){
+    const input = document.getElementById(`proveedor_dir_${orderId}`);
+    const address = input ? input.value.trim() : getProveedorDireccion(orderId);
+    if(!address){
+      alert('Escribe primero la dirección o el nombre del proveedor para verlo en el mapa.');
+      return;
+    }
+    saveProveedorDireccion(orderId, address);
+    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, '_blank', 'noopener');
+  }
+  window.openProveedorMap = openProveedorMap;
+
+  function waRecogidaMessage(order, proveedorAddress){
+    const itemsText = (order.items || []).map(i => `- ${i.name}${i.color ? ' / ' + i.color : ''}${i.size ? ' / ' + i.size : ''} x${i.qty}`).join('\n');
+    return `🏭 Recogida de pedido en el proveedor\n\n` +
+      `📍 Recoger en: ${proveedorAddress || '(añade la dirección del proveedor)'}\n` +
+      `🏬 Llevar a: ${WAREHOUSE_ADDRESS}\n\n` +
+      `🧾 Pedido:\n${itemsText || '—'}`;
+  }
+
+  function sendOrderToRecogida(orderId){
+    const input = document.getElementById(`recogida_${orderId}`);
+    const phone = input ? input.value.trim() : getRecogidaPhone(orderId);
+    const phoneDigits = phone.replace(/[^0-9]/g,'');
+    if(!phone || phoneDigits.length < 8){
+      alert('Escribe el número completo del repartidor de recogida (después del +212) en este pedido.');
+      return;
+    }
+    saveRecogidaPhone(orderId, phone);
+    const order = currentOrders.find(o => o.id === orderId);
+    if(!order) return;
+    const addrInput = document.getElementById(`proveedor_dir_${orderId}`);
+    const proveedorAddress = addrInput ? addrInput.value.trim() : getProveedorDireccion(orderId);
+    const waUrl = `https://wa.me/212${phoneDigits}?text=${encodeURIComponent(waRecogidaMessage(order, proveedorAddress))}`;
+    window.open(waUrl, '_blank', 'noopener');
+  }
+  window.sendOrderToRecogida = sendOrderToRecogida;
+
+  function waRepartidorMessage(order){
+    const itemsText = (order.items || []).map(i => `- ${i.name}${i.color ? ' / ' + i.color : ''}${i.size ? ' / ' + i.size : ''} x${i.qty}`).join('\n');
+    return `📦 Nuevo pedido para entregar\n` +
+      `👤 ${[order.first_name, order.last_name].filter(Boolean).join(' ') || '—'}\n` +
+      `📞 ${order.phone || '—'}\n` +
+      `📍 ${order.address || '—'}\n\n` +
+      `🧾 Pedido:\n${itemsText || '—'}\n\n` +
+      `💰 Total a cobrar: ${order.total} DH`;
+  }
+
+  function sendOrderToRepartidor(orderId){
+    const input = document.getElementById(`repartidor_${orderId}`);
+    const phone = input ? input.value.trim() : getRepartidorPhone(orderId);
+    const phoneDigits = phone.replace(/[^0-9]/g,'');
+    if(!phone || phoneDigits.length < 8){
+      alert('Escribe el número completo del repartidor (después del +212) en este pedido.');
+      return;
+    }
+    saveRepartidorPhone(orderId, phone);
+    const order = currentOrders.find(o => o.id === orderId);
+    if(!order) return;
+    const waUrl = `https://wa.me/212${phoneDigits}?text=${encodeURIComponent(waRepartidorMessage(order))}`;
+    window.open(waUrl, '_blank', 'noopener');
+  }
+  window.sendOrderToRepartidor = sendOrderToRepartidor;
+
+  // ===== Recibo del pedido =====
+  function buildReceiptHtml(order){
+    const fecha = new Date(order.created_at).toLocaleString('es-ES', {dateStyle:'long', timeStyle:'short'});
+    const clientName = [order.first_name, order.last_name].filter(Boolean).join(' ') || '—';
+    const itemsRows = (order.items || []).map(i => `
+      <tr>
+        <td>${i.name}${i.color ? ' / ' + i.color : ''}${i.size ? ' / ' + i.size : ''}</td>
+        <td style="text-align:center;">${i.qty}</td>
+      </tr>`).join('');
+    return `
+  <div class="receipt-inner">
+    <div class="r-header">
+      <div class="r-mark">
+        <svg viewBox="0 0 48 48" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 15h14l-1.4 15.5a2 2 0 0 1-2 1.8H12.4a2 2 0 0 1-2-1.8L9 15z" fill="#fff" opacity=".85"/>
+          <path d="M13 15v-2.5a3 3 0 0 1 3-3h1a3 3 0 0 1 3 3V15" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>
+          <path d="M20 20h16l-1.6 17.5a2 2 0 0 1-2 1.8H23.6a2 2 0 0 1-2-1.8L20 20z" fill="#fff"/>
+          <path d="M24.5 20v-2.8a3.5 3.5 0 0 1 3.5-3.5h1a3.5 3.5 0 0 1 3.5 3.5V20" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="r-name">PETRA</div>
+    </div>
+    <div class="r-sub">Recibo de pedido</div>
+    <div class="r-row"><span class="r-label">Fecha y hora</span><span class="r-val">${fecha}</span></div>
+    <div class="r-divider"></div>
+    <div class="r-row"><span class="r-label">Cliente</span><span class="r-val">${clientName}</span></div>
+    <div class="r-row"><span class="r-label">Teléfono</span><span class="r-val">${order.phone || '—'}</span></div>
+    <div class="r-row"><span class="r-label">Dirección</span><span class="r-val">${order.address || '—'}</span></div>
+    <div class="r-divider"></div>
+    <table>
+      <thead><tr><th>Artículo</th><th style="text-align:center;">Cant.</th></tr></thead>
+      <tbody>${itemsRows}</tbody>
+    </table>
+    <div class="r-divider"></div>
+    <div class="r-total"><span>Total a pagar</span><span class="amount">${order.total} DH</span></div>
+    <div class="r-footer">¡Gracias por tu compra!</div>
+    <button type="button" class="receipt-print-btn" onclick="printReceiptWithAnimation()">🖨️ Imprimir recibo</button>
+  </div>`;
+  }
+
+  function printReceiptWithAnimation(){
+    const inner = document.querySelector('#receiptContent .receipt-inner');
+    const printerIcon = document.getElementById('printerIcon');
+    if(inner) inner.classList.add('printing');
+    if(printerIcon) printerIcon.classList.add('active');
+    setTimeout(() => {
+      if(inner) inner.classList.remove('printing');
+      if(printerIcon) printerIcon.classList.remove('active');
+      setTimeout(() => window.print(), 50);
+    }, 650);
+  }
+  window.printReceiptWithAnimation = printReceiptWithAnimation;
+
+  function openReceipt(orderId){
+    const order = currentOrders.find(o => o.id === orderId);
+    if(!order) return;
+    receiptContent.innerHTML = buildReceiptHtml(order);
+    receiptOverlay.classList.add('show');
+  }
+  window.openReceipt = openReceipt;
+
+  function closeReceiptModal(){
+    receiptOverlay.classList.remove('show');
+    receiptContent.innerHTML = '';
+  }
+  if(receiptCloseBtn) receiptCloseBtn.addEventListener('click', closeReceiptModal);
+  if(receiptOverlay) receiptOverlay.addEventListener('click', (e) => { if(e.target === receiptOverlay) closeReceiptModal(); });
+
+  async function loadOrdersList(){
+    ordersList.innerHTML = 'Cargando pedidos…';
+    const { data, error } = await supabaseClient.from('orders').select('*').order('created_at', { ascending: false }).limit(50);
+    if(error){
+      ordersList.innerHTML = `<div class="orders-empty">No se pudieron cargar los pedidos.<br>${error.message || ''}</div>`;
+      return;
+    }
+    if(!data || !data.length){
+      ordersList.innerHTML = `<div class="orders-empty">Todavía no ha llegado ningún pedido.</div>`;
+      return;
+    }
+    currentOrders = data;
+    ordersList.innerHTML = data.map(o => {
+      const fecha = new Date(o.created_at).toLocaleString('es-ES', {dateStyle:'medium', timeStyle:'short'});
+      const itemsText = (o.items || []).map(i => `${i.name}${i.color ? ' / ' + i.color : ''}${i.size ? ' / ' + i.size : ''} x${i.qty}`).join('\n');
+      const phoneDigits = (o.phone || '').replace(/[^0-9]/g,'');
+      const waUrl = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(waThankYouMessage(o))}`;
+      return `
+        <div class="order-card">
+          <div class="o-top">
+            <span class="o-date">${fecha}</span>
+            <span class="o-total">${o.total} DH</span>
+          </div>
+          <div class="o-line">👤 ${[o.first_name, o.last_name].filter(Boolean).join(' ') || '—'}</div>
+          <div class="o-line">📧 ${o.email || '—'}</div>
+          <div class="o-line">📞 ${o.phone || '—'}</div>
+          <div class="o-line">📍 ${o.address || '—'}</div>
+          <div class="o-items">${itemsText}</div>
+          <div class="o-repartidor-row">
+            <label for="repartidor_${o.id}">📦 Repartidor (entrega cliente):</label>
+            <div class="o-phone-wrap">
+              <span class="o-phone-prefix">+212</span>
+              <input type="tel" class="o-phone-input" id="repartidor_${o.id}" placeholder="600 000 000" value="${getRepartidorPhone(o.id)}" oninput="saveRepartidorPhone(${o.id}, this.value)">
+            </div>
+          </div>
+          <div class="o-repartidor-row">
+            <label for="recogida_${o.id}">🏭 Repartidor (recogida proveedor):</label>
+            <div class="o-phone-wrap">
+              <span class="o-phone-prefix">+212</span>
+              <input type="tel" class="o-phone-input" id="recogida_${o.id}" placeholder="600 000 000" value="${getRecogidaPhone(o.id)}" oninput="saveRecogidaPhone(${o.id}, this.value)">
+            </div>
+          </div>
+          <div class="o-map-row">
+            <label for="proveedor_dir_${o.id}">📍 Datos proveedor:</label>
+            <input type="text" class="o-repartidor-input" id="proveedor_dir_${o.id}" dir="auto" placeholder="Dirección, nombre y teléfono del proveedor" value="${getProveedorDireccion(o.id)}" oninput="saveProveedorDireccion(${o.id}, this.value)">
+          </div>
+          <div class="o-actions">
+            <a class="o-wa-btn ${o.notified ? 'sent' : ''}" href="${waUrl}" target="_blank" rel="noopener" onclick="markOrderNotified(${o.id})">
+              ${o.notified ? '✓ Ya enviado' : '💬 Enviar WhatsApp de agradecimiento'}
+            </a>
+            <button type="button" class="o-wa-repartidor-btn" onclick="sendOrderToRepartidor(${o.id})">📦 Enviar al repartidor (entrega)</button>
+            <button type="button" class="o-recogida-btn" onclick="sendOrderToRecogida(${o.id})">🏭 Enviar al repartidor (recogida)</button>
+            <button type="button" class="o-map-link" onclick="openProveedorMap(${o.id})">🗺️ Ver proveedor en mapa</button>
+            <button type="button" class="o-receipt-btn" onclick="openReceipt(${o.id})">🧾 Recibo</button>
+            <button type="button" class="o-del-btn" onclick="deleteOrder(${o.id})">🗑 Borrar pedido</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  async function markOrderNotified(orderId){
+    await supabaseClient.from('orders').update({ notified: true }).eq('id', orderId);
+  }
+  window.markOrderNotified = markOrderNotified;
+
+  async function deleteOrder(orderId){
+    const ok = window.confirm('¿Seguro que quieres borrar este pedido? Esta acción no se puede deshacer.');
+    if(!ok) return;
+    const { error, data } = await supabaseClient.from('orders').delete().eq('id', orderId).select();
+    if(error){
+      console.error('Error al borrar el pedido:', error);
+      alert('No se pudo borrar el pedido.\n\nMotivo: ' + (error.message || 'desconocido') + '\n\nEsto suele pasar si en Supabase falta el permiso de "eliminar" (DELETE) en la tabla orders.');
+      return;
+    }
+    if(!data || !data.length){
+      alert('El pedido no se ha borrado. Puede que en Supabase falte el permiso de "eliminar" (DELETE) para la tabla orders (RLS).');
+      return;
+    }
+    loadOrdersList();
+  }
+  window.deleteOrder = deleteOrder;
+
+  if(sessionStorage.getItem(AUTH_KEY) === 'ok'){
+    showPedidos();
+  } else {
+    showLock();
+  }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://ortnsekmoxnxxyklxcsr.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_uGJm-mdrUHz3qVpjvVRZzg_cg0BgZfO';
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ===== Aviso automático: sonido + refresco cuando llega un pedido nuevo (en tiempo real) =====
+  function beepNewOrder(){
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [0, 220].forEach(delay => {
+        setTimeout(() => {
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.type = 'sine';
+          o.frequency.value = 880;
+          g.gain.value = 0.2;
+          o.connect(g); g.connect(ctx.destination);
+          o.start();
+          o.stop(ctx.currentTime + 0.18);
+        }, delay);
+      });
+      setTimeout(() => ctx.close(), 500);
+    }catch(e){ /* el navegador bloqueó el sonido, no pasa nada */ }
+  }
+
+  supabaseClient
+    .channel('orders-nuevo-pedido')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, () => {
+      beepNewOrder();
+      if(typeof loadOrdersList === 'function' && sessionStorage.getItem(AUTH_KEY) === 'ok') loadOrdersList();
+    })
+    .subscribe();
+</script>
+
+</body>
+</html>
