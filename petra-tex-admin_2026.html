@@ -1,0 +1,1900 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PETRA - Panel de administración</title>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+  :root{
+    --orange:#FF6A00;
+    --orange-dark:#E85A00;
+    --black:#111111;
+    --gray-text:#767676;
+    --gray-border:#E5E5E5;
+    --bg:#F7F7F7;
+    --green:#1B9A5B;
+    --red:#D6362B;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:"Helvetica Neue",Arial,sans-serif;}
+  body{background:var(--bg);color:var(--black);}
+  a{text-decoration:none;color:inherit;}
+  button{cursor:pointer;border:none;font-family:inherit;}
+  input,select,textarea{font-family:inherit;}
+
+  /* HEADER */
+  header{
+    background:#111;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 28px;
+    flex-wrap:wrap;
+    row-gap:10px;
+  }
+  header .logo{display:flex;align-items:center;gap:10px;}
+  header .logo .mark{
+    width:34px;height:34px;background:var(--orange);border-radius:8px;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;
+  }
+  header .logo .name{font-weight:800;font-size:16px;letter-spacing:.5px;}
+  header .logo .name span{color:var(--orange);}
+  header .title{font-size:14px;color:#bdbdbd;}
+  header .back{
+    background:transparent;
+    color:#fff;
+    border:1px solid #444;
+    padding:8px 16px;
+    border-radius:20px;
+    font-size:13px;
+    font-weight:600;
+  }
+  header .back:hover{border-color:var(--orange);color:var(--orange);}
+
+  .layout{
+    display:grid;
+    grid-template-columns:400px 1fr;
+    gap:24px;
+    padding:24px;
+    align-items:start;
+  }
+
+  /* FORM CARD */
+  .card{
+    background:#fff;
+    border:1px solid var(--gray-border);
+    border-radius:12px;
+    padding:22px;
+  }
+  .card h2{font-size:17px;margin-bottom:4px;}
+  .card .hint{font-size:12.5px;color:var(--gray-text);margin-bottom:18px;}
+
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block;
+    font-size:12.5px;
+    font-weight:700;
+    margin-bottom:6px;
+    color:#333;
+  }
+  .field input[type=text],
+  .field input[type=number],
+  .field input[type=url],
+  .field select,
+  .field textarea{
+    width:100%;
+    padding:10px 12px;
+    border:1.5px solid var(--gray-border);
+    border-radius:8px;
+    font-size:13.5px;
+    outline:none;
+  }
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus{border-color:var(--orange);}
+  .field textarea{resize:vertical;min-height:60px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+  /* colors chip builder */
+  .color-input-row{display:flex;gap:8px;margin-bottom:10px;}
+  .color-input-row input[type=text]{flex:1;}
+  .color-input-row input[type=color]{
+    width:44px;height:40px;border:1.5px solid var(--gray-border);border-radius:8px;padding:2px;background:#fff;
+  }
+  .color-input-row button{
+    background:var(--black);color:#fff;padding:0 14px;border-radius:8px;font-size:13px;font-weight:700;
+  }
+  .color-input-row button.palette-btn{
+    background:var(--black);color:#fff;padding:0 22px;border-radius:10px;font-size:17px;font-weight:700;height:52px;
+  }
+  .chip-list{display:flex;flex-wrap:wrap;gap:8px;min-height:10px;}
+  .chip{
+    display:flex;align-items:center;gap:6px;
+    border:1px solid var(--gray-border);
+    border-radius:16px;
+    padding:5px 6px 5px 10px;
+    font-size:12.5px;
+    background:#FAFAFA;
+  }
+  .chip .swatch{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.15);}
+  .chip .rm{
+    width:16px;height:16px;border-radius:50%;background:#e2e2e2;
+    display:flex;align-items:center;justify-content:center;font-size:10px;color:#555;
+  }
+  .chip .rm:hover{background:var(--red);color:#fff;}
+  .chip .swatch.has-img{border-radius:4px;}
+  .chip .cam{
+    width:16px;height:16px;border-radius:50%;background:#e2e2e2;
+    display:flex;align-items:center;justify-content:center;font-size:9px;color:#555;cursor:pointer;
+  }
+  .detail-chip{
+    border:1px solid var(--gray-border);border-radius:16px;
+    padding:6px 12px;font-size:12px;background:#FAFAFA;color:#333;
+    cursor:pointer;max-width:100%;text-align:left;line-height:1.4;
+  }
+  .detail-chip:hover{background:#F0F0F0;border-color:#ccc;}
+  .detail-group-label{
+    width:100%;font-size:12px;font-weight:700;color:var(--black);
+    margin:6px 0 -2px;
+  }
+  .chip .cam:hover{background:var(--orange);color:#fff;}
+  .chip .cam.assigned{background:var(--orange);color:#fff;}
+  .color-image-picker{
+    display:none;position:fixed;z-index:50;
+    background:#fff;border:1.5px solid var(--gray-border);border-radius:10px;
+    box-shadow:0 8px 24px rgba(0,0,0,.15);padding:10px;width:220px;
+  }
+  .color-image-picker.open{display:block;}
+  .color-image-picker .hint{font-size:11.5px;color:var(--gray-text);margin-bottom:8px;}
+  .color-image-picker .pic-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+  .color-image-picker .pic-opt{width:100%;aspect-ratio:3/4;border-radius:6px;overflow:hidden;cursor:pointer;border:2px solid transparent;}
+  .color-image-picker .pic-opt img{width:100%;height:100%;object-fit:cover;display:block;}
+  .color-image-picker .pic-opt:hover{border-color:var(--orange);}
+  .color-image-picker .pic-none{font-size:12px;color:var(--gray-text);text-align:center;padding:8px 0;}
+
+  /* paleta de colores predefinidos */
+  .palette-btn{
+    background:#fff;color:var(--black);padding:0 22px;border-radius:10px;font-size:17px;font-weight:700;
+    border:1.5px solid var(--gray-border);white-space:nowrap;height:52px;
+  }
+  .palette-btn:hover{border-color:var(--orange);color:var(--orange);}
+  .color-input-row{position:relative;}
+  .color-palette{
+    display:none;
+    position:absolute;top:calc(100% + 6px);left:0;z-index:20;
+    background:#fff;border:1.5px solid var(--gray-border);border-radius:10px;
+    box-shadow:0 8px 24px rgba(0,0,0,.12);
+    padding:10px;width:280px;max-height:340px;overflow-y:auto;
+    grid-template-columns:repeat(2,1fr);gap:4px;
+  }
+  .color-palette.open{display:grid;}
+  .color-palette .pal-opt{
+    display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;
+  }
+  .color-palette .pal-opt:hover{background:#FAFAFA;}
+  .color-palette .pal-opt .swatch{
+    width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.15);flex-shrink:0;
+  }
+
+  /* sizes */
+  .size-options{display:flex;flex-wrap:wrap;gap:8px;}
+  .size-opt{
+    border:1.5px solid var(--gray-border);
+    border-radius:6px;
+    padding:6px 12px;
+    font-size:12.5px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .size-opt.selected{
+    border-color:var(--black);
+    background:var(--black);
+    color:#fff;
+  }
+  .size-opt-wrap{position:relative;display:inline-flex;}
+  .size-opt-tip{
+    display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+    background:#111;color:#fff;padding:9px 11px;border-radius:8px;font-size:11.5px;font-weight:500;
+    line-height:1.5;white-space:nowrap;z-index:20;box-shadow:0 4px 14px rgba(0,0,0,.25);
+  }
+  .size-opt-tip::after{
+    content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);
+    border:6px solid transparent;border-top-color:#111;
+  }
+  .size-opt-tip b{color:var(--orange);}
+  .size-opt-wrap:hover .size-opt-tip{display:block;}
+
+  /* checkbox-style option list (material, temporada) */
+  .check-options{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;}
+  .check-opt{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:7px 4px;
+    font-size:13.5px;
+    cursor:pointer;
+  }
+  .check-opt input{width:16px;height:16px;accent-color:var(--black);cursor:pointer;}
+
+  .upload-btn{
+    width:100%;
+    background:#fff;
+    color:var(--black);
+    border:1.5px dashed var(--gray-border);
+    border-radius:8px;
+    padding:12px;
+    font-size:13px;
+    font-weight:700;
+    margin-bottom:10px;
+  }
+  .upload-btn:hover{border-color:var(--orange);color:var(--orange);}
+  .image-preview{
+    width:100%;
+    min-height:70px;
+    border:1px solid var(--gray-border);
+    border-radius:8px;
+    background:#FAFAFA;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--gray-text);
+    font-size:12.5px;
+    overflow:hidden;
+    padding:10px;
+  }
+  .image-preview img{width:100%;height:100%;object-fit:cover;}
+  .gallery-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+    width:100%;
+  }
+  .gallery-thumb{
+    position:relative;
+    aspect-ratio:3/4;
+    border-radius:6px;
+    overflow:hidden;
+    border:2px solid transparent;
+  }
+  .gallery-thumb.cover{border-color:var(--orange);}
+  .gallery-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .gallery-thumb .cover-tag{
+    position:absolute;bottom:0;left:0;right:0;
+    background:rgba(0,0,0,.65);color:#fff;
+    font-size:9.5px;text-align:center;padding:2px 0;
+  }
+  .gallery-thumb .remove-thumb{
+    position:absolute;top:2px;right:2px;
+    width:18px;height:18px;border-radius:50%;
+    background:rgba(0,0,0,.65);color:#fff;
+    font-size:11px;display:flex;align-items:center;justify-content:center;
+    line-height:1;
+  }
+  .gallery-thumb .remove-thumb:hover{background:var(--orange);}
+  .gallery-thumb .thumb-move{
+    position:absolute;top:0;bottom:0;left:0;right:0;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:0 2px;
+    pointer-events:none;
+  }
+  .gallery-thumb .thumb-move span{
+    pointer-events:auto;
+    width:20px;height:20px;
+    background:rgba(0,0,0,.55);
+    color:#fff;
+    border-radius:4px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:14px;
+    line-height:1;
+  }
+  .gallery-thumb .thumb-move span:hover{background:var(--orange);}
+  .gallery-hint{
+    grid-column:1/-1;
+    font-size:11.5px;
+    color:var(--gray-text);
+  }
+
+  .submit-btn{
+    width:100%;
+    background:var(--orange);
+    color:#fff;
+    padding:13px;
+    border-radius:24px;
+    font-size:14.5px;
+    font-weight:800;
+    margin-top:6px;
+  }
+  .submit-btn:hover{background:var(--orange-dark);}
+  .cancel-edit{
+    width:100%;
+    background:transparent;
+    color:var(--gray-text);
+    padding:10px;
+    font-size:13px;
+    margin-top:6px;
+    text-align:center;
+  }
+
+  /* PRODUCT LIST */
+  .list-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .list-header h2{font-size:17px;}
+  .list-header .count{
+    font-size:13px;
+    color:var(--gray-text);
+    background:#fff;
+    border:1px solid var(--gray-border);
+    padding:6px 14px;
+    border-radius:16px;
+  }
+
+  .product-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+    gap:18px;
+  }
+  .product-card{
+    background:#fff;
+    border:1px solid var(--gray-border);
+    border-radius:12px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  .product-card .img{
+    width:100%;
+    aspect-ratio:3/4;
+    background:#F0F0F0;
+    display:flex;align-items:center;justify-content:center;
+    color:#bbb;font-size:12px;
+    overflow:hidden;
+    position:relative;
+  }
+  .product-card .img img{width:100%;height:100%;object-fit:cover;}
+  .product-card .body{padding:12px 14px 14px;flex:1;display:flex;flex-direction:column;gap:6px;}
+  .product-card .name{font-size:13.5px;font-weight:600;line-height:1.3;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:34px;}
+  .product-card .price-row{display:flex;align-items:baseline;gap:8px;}
+  .product-card .price{color:var(--orange);font-weight:800;font-size:16px;}
+  .product-card .price-old{color:#aaa;text-decoration:line-through;font-size:12.5px;}
+  .product-card .cat{font-size:11.5px;color:var(--gray-text);}
+  .product-card .swatches{display:flex;gap:5px;margin-top:2px;}
+  .product-card .swatches .sw{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.15);}
+  .product-card .sizes-tag{font-size:11px;color:var(--gray-text);}
+  .product-card .stock{font-size:11.5px;font-weight:700;}
+  .product-card .stock.in{color:var(--green);}
+  .product-card .stock.out{color:var(--red);}
+  .product-card .actions{
+    display:flex;gap:8px;margin-top:8px;
+  }
+  .product-card .actions button{
+    flex:1;
+    padding:8px;
+    border-radius:8px;
+    font-size:12px;
+    font-weight:700;
+  }
+  .btn-edit{background:#111;color:#fff;}
+  .btn-edit:hover{background:#333;}
+  .btn-delete{background:#FDEDEC;color:var(--red);}
+  .btn-delete:hover{background:var(--red);color:#fff;}
+
+  .empty-state{
+    grid-column:1/-1;
+    text-align:center;
+    padding:60px 20px;
+    color:var(--gray-text);
+    background:#fff;
+    border:1px dashed var(--gray-border);
+    border-radius:12px;
+    font-size:14px;
+  }
+
+  @media (max-width:900px){
+    .layout{grid-template-columns:1fr;}
+  }
+
+  /* ===== PANTALLA DE ACCESO (contraseña) ===== */
+  .lock-screen{
+    position:fixed;inset:0;
+    background:#111;
+    display:flex;align-items:center;justify-content:center;
+    z-index:500;
+  }
+  .lock-box{
+    background:#fff;
+    border-radius:12px;
+    padding:36px 32px;
+    width:100%;
+    max-width:340px;
+    text-align:center;
+  }
+  .lock-box .mark{
+    width:52px;height:52px;
+    background:var(--orange);
+    border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:800;font-size:17px;
+    margin:0 auto 16px;
+  }
+  .lock-box h2{font-size:17px;margin-bottom:6px;}
+  .lock-box p{font-size:13px;color:var(--gray-text);margin-bottom:18px;}
+  .lock-box input{
+    width:100%;
+    padding:12px 14px;
+    border:1.5px solid var(--gray-border);
+    border-radius:8px;
+    font-size:14px;
+    margin-bottom:10px;
+    text-align:center;
+    letter-spacing:1px;
+  }
+  .lock-box input:focus{outline:none;border-color:var(--orange);}
+  .lock-box button{
+    width:100%;
+    background:var(--orange);
+    color:#fff;
+    font-weight:700;
+    padding:12px;
+    border-radius:8px;
+    font-size:14px;
+  }
+  .lock-box button:hover{background:var(--orange-dark);}
+  .lock-error{
+    color:var(--red);
+    font-size:12.5px;
+    margin-bottom:10px;
+    display:none;
+  }
+  .lock-error.show{display:block;}
+  .lock-forgot{
+    display:block;
+    margin-top:14px;
+    font-size:12.5px;
+    color:var(--gray-text);
+    text-decoration:underline;
+  }
+  .lock-forgot:hover{color:var(--orange);}
+  .lock-recover-btn{
+    width:100%;
+    background:#fff;
+    color:var(--orange);
+    font-weight:700;
+    padding:12px;
+    border-radius:8px;
+    font-size:14px;
+    margin-top:12px;
+    border:1.5px solid var(--orange);
+  }
+  .lock-recover-btn:hover{background:#FFF4EC;}
+  .lock-recovery{display:none;margin-top:16px;text-align:left;}
+  .lock-recovery.show{display:block;}
+  .lock-recovery p{font-size:12px;color:var(--gray-text);margin-bottom:12px;text-align:center;}
+  .lock-recovery button{
+    width:100%;
+    background:var(--black);
+    color:#fff;
+    font-weight:700;
+    padding:12px;
+    border-radius:8px;
+    font-size:13.5px;
+    margin-bottom:8px;
+  }
+  .lock-recovery button:hover{background:var(--orange);}
+  .lock-recovery .lock-back{
+    background:none;color:var(--gray-text);font-weight:600;font-size:12px;
+    text-decoration:underline;padding:4px;
+  }
+  .lock-recovery .lock-sent{
+    display:none;
+    color:var(--green);font-size:12.5px;text-align:center;margin-top:8px;
+  }
+  .lock-recovery .lock-sent.show{display:block;}
+  #adminContent{display:none;}
+  .logout-btn{
+    background:none;
+    border:1.5px solid var(--gray-border);
+    color:var(--black);
+    font-size:12.5px;
+    font-weight:700;
+    padding:8px 14px;
+    border-radius:8px;
+    margin-left:10px;
+  }
+  .logout-btn:hover{border-color:var(--red);color:var(--red);}
+  .backup-btn{
+    background:transparent;
+    border:1px solid #444;
+    color:#fff;
+    font-size:12.5px;
+    font-weight:700;
+    padding:8px 14px;
+    border-radius:20px;
+    margin-left:10px;
+    cursor:pointer;
+  }
+  .backup-btn:hover{border-color:var(--orange);color:var(--orange);}
+
+
+  /* ===== MODAL CAMBIAR CONTRASEÑA ===== */
+  .change-pass-overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.55);
+    display:none;
+    align-items:center;justify-content:center;
+    z-index:700;
+  }
+  .change-pass-overlay.show{display:flex;}
+  .change-pass-box{
+    background:#fff;
+    border-radius:12px;
+    padding:32px 28px;
+    width:100%;
+    max-width:340px;
+    text-align:center;
+  }
+  .change-pass-box h2{font-size:17px;margin-bottom:6px;}
+  .change-pass-box p{font-size:13px;color:var(--gray-text);margin-bottom:18px;}
+  .change-pass-box input{
+    width:100%;
+    padding:12px 14px;
+    border:1.5px solid var(--gray-border);
+    border-radius:8px;
+    font-size:14px;
+    margin-bottom:10px;
+    text-align:center;
+  }
+  .change-pass-box input:focus{outline:none;border-color:var(--orange);}
+  .change-pass-error{
+    color:var(--red);
+    font-size:12.5px;
+    margin-bottom:10px;
+    display:none;
+  }
+  .change-pass-error.show{display:block;}
+  .change-pass-success{
+    color:var(--green);
+    font-size:12.5px;
+    margin-bottom:10px;
+    display:none;
+  }
+  .change-pass-success.show{display:block;}
+  .change-pass-box .cp-save-btn{
+    width:100%;
+    background:var(--orange);
+    color:#fff;
+    font-weight:700;
+    padding:12px;
+    border-radius:8px;
+    font-size:14px;
+    margin-bottom:8px;
+  }
+  .change-pass-box .cp-save-btn:hover{background:var(--orange-dark);}
+  .change-pass-box .cp-cancel-btn{
+    width:100%;
+    background:none;
+    color:var(--gray-text);
+    font-weight:600;
+    padding:10px;
+    font-size:13px;
+    text-decoration:underline;
+  }
+
+</style>
+</head>
+<body>
+
+  <!-- ===== PANTALLA DE ACCESO ===== -->
+  <div class="lock-screen" id="lockScreen">
+    <div class="lock-box">
+      <div class="mark">
+        <svg viewBox="0 0 48 48" width="30" height="30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 15h14l-1.4 15.5a2 2 0 0 1-2 1.8H12.4a2 2 0 0 1-2-1.8L9 15z" fill="#fff" opacity=".85"/>
+          <path d="M13 15v-2.5a3 3 0 0 1 3-3h1a3 3 0 0 1 3 3V15" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>
+          <path d="M20 20h16l-1.6 17.5a2 2 0 0 1-2 1.8H23.6a2 2 0 0 1-2-1.8L20 20z" fill="#fff"/>
+          <path d="M24.5 20v-2.8a3.5 3.5 0 0 1 3.5-3.5h1a3.5 3.5 0 0 1 3.5 3.5V20" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2>Acceso al panel</h2>
+      <p>Introduce la contraseña para gestionar el catálogo.</p>
+      <div class="lock-error" id="lockError">Contraseña incorrecta.</div>
+      <input type="password" id="lockPassword" placeholder="Contraseña" autocomplete="off">
+      <button type="button" id="lockSubmit">Entrar</button>
+      <button type="button" class="lock-recover-btn" id="lockRecoverBtn">🔑 Recuperar contraseña</button>
+      <a href="#" class="lock-forgot" id="lockForgotLink">¿Olvidaste tu contraseña?</a>
+      <div class="lock-recovery" id="lockRecovery">
+        <p>Te enviaremos la contraseña actual a rainatex3@gmail.com</p>
+        <button type="button" id="lockRecoverySend">Enviar contraseña a mi correo</button>
+        <button type="button" class="lock-back" id="lockRecoveryBack">Volver</button>
+        <div class="lock-sent" id="lockSentMsg">✓ Contraseña enviada. Revisa tu Gmail.</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="adminContent">
+
+  <header>
+    <div class="logo">
+      <div class="mark">
+        <svg viewBox="0 0 48 48" width="30" height="30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 15h14l-1.4 15.5a2 2 0 0 1-2 1.8H12.4a2 2 0 0 1-2-1.8L9 15z" fill="#fff" opacity=".85"/>
+          <path d="M13 15v-2.5a3 3 0 0 1 3-3h1a3 3 0 0 1 3 3V15" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>
+          <path d="M20 20h16l-1.6 17.5a2 2 0 0 1-2 1.8H23.6a2 2 0 0 1-2-1.8L20 20z" fill="#fff"/>
+          <path d="M24.5 20v-2.8a3.5 3.5 0 0 1 3.5-3.5h1a3.5 3.5 0 0 1 3.5 3.5V20" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="name">PETRA</div>
+    </div>
+    <div class="title">Panel de administración · Gestión de catálogo</div>
+    <a href="index.html" class="back">← Volver a la tienda</a>
+    <a href="petra-tex-pedidos.html" class="back">🧾 Pedidos</a>
+    <button type="button" class="backup-btn" id="exportBackupBtn">⬇️ Exportar copia de seguridad</button>
+    <button type="button" class="backup-btn" id="importBackupBtn">⬆️ Importar copia de seguridad</button>
+    <input type="file" id="importBackupFile" accept="application/json,.json" style="display:none;">
+    <button type="button" class="logout-btn" id="changePasswordBtn">🔑 Cambiar contraseña</button>
+    <button type="button" class="logout-btn" id="logoutBtn">🔒 Cerrar sesión</button>
+  </header>
+
+  <!-- ===== MODAL CAMBIAR CONTRASEÑA ===== -->
+  <div class="change-pass-overlay" id="changePassOverlay">
+    <div class="change-pass-box">
+      <div class="mark" style="width:52px;height:52px;background:var(--orange);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+        <svg viewBox="0 0 48 48" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 15h14l-1.4 15.5a2 2 0 0 1-2 1.8H12.4a2 2 0 0 1-2-1.8L9 15z" fill="#fff" opacity=".85"/>
+          <path d="M13 15v-2.5a3 3 0 0 1 3-3h1a3 3 0 0 1 3 3V15" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>
+          <path d="M20 20h16l-1.6 17.5a2 2 0 0 1-2 1.8H23.6a2 2 0 0 1-2-1.8L20 20z" fill="#fff"/>
+          <path d="M24.5 20v-2.8a3.5 3.5 0 0 1 3.5-3.5h1a3.5 3.5 0 0 1 3.5 3.5V20" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2>Cambiar contraseña</h2>
+      <p>Introduce tu contraseña actual y la nueva contraseña.<br>Mínimo 12 caracteres, con mayúsculas, minúsculas, números y símbolos.</p>
+      <div class="change-pass-error" id="cpError">Contraseña actual incorrecta.</div>
+      <div class="change-pass-success" id="cpSuccess">✓ Contraseña actualizada correctamente.</div>
+      <input type="password" id="cpOldPassword" placeholder="Contraseña antigua" autocomplete="off">
+      <input type="password" id="cpNewPassword" placeholder="Nueva contraseña" autocomplete="off">
+      <input type="password" id="cpConfirmPassword" placeholder="Confirmar nueva contraseña" autocomplete="off">
+      <button type="button" class="cp-save-btn" id="cpSaveBtn">Guardar nueva contraseña</button>
+      <button type="button" class="cp-cancel-btn" id="cpCancelBtn">Cancelar</button>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- ===== FORM ===== -->
+    <div class="card">
+      <h2 id="formTitle">Añadir nueva prenda</h2>
+      <p class="hint">Rellena los datos del modelo y pulsa "Añadir al catálogo".</p>
+
+      <form id="productForm">
+        <div class="field">
+          <label>Nombre de la prenda</label>
+          <input type="text" id="f_name" list="garmentTypes" placeholder="Ej: Vestido floral de manga larga" required autocomplete="off">
+          <datalist id="garmentTypes">
+            <!-- Mujer -->
+            <option value="Vestido">
+            <option value="Blusa">
+            <option value="Camisa de mujer">
+            <option value="Camiseta de mujer">
+            <option value="Top">
+            <option value="Pantalón de mujer">
+            <option value="Vaquero de mujer">
+            <option value="Falda">
+            <option value="Abrigo">
+            <option value="Chaqueta de mujer">
+            <option value="Sudadera de mujer">
+            <option value="Jersey de mujer">
+            <option value="Chándal de mujer">
+            <option value="Bañador">
+            <option value="Bikini">
+            <option value="Pijama de mujer">
+            <option value="Conjunto de mujer">
+            <option value="Conjunto de ropa interior de mujer">
+            <option value="Conjunto dos piezas de mujer">
+            <option value="Conjunto de lencería">
+            <option value="Zapatos de mujer">
+            <option value="Sandalias de mujer">
+            <option value="Botas de mujer">
+            <!-- Hombre -->
+            <option value="Camisa de hombre">
+            <option value="Camiseta de hombre">
+            <option value="Polo de hombre">
+            <option value="Pantalón de hombre">
+            <option value="Vaquero de hombre">
+            <option value="Chaqueta de hombre">
+            <option value="Abrigo de hombre">
+            <option value="Sudadera de hombre">
+            <option value="Jersey de hombre">
+            <option value="Chándal de hombre">
+            <option value="Conjunto de hombre">
+            <option value="Conjunto de ropa interior de hombre">
+            <option value="Conjunto dos piezas de hombre">
+            <option value="Bañador de hombre">
+            <option value="Ropa interior de hombre">
+            <option value="Zapatos de hombre">
+            <option value="Zapatillas de hombre">
+            <option value="Botas de hombre">
+            <!-- Niña -->
+            <option value="Vestido de niña">
+            <option value="Blusa de niña">
+            <option value="Camiseta de niña">
+            <option value="Pantalón de niña">
+            <option value="Falda de niña">
+            <option value="Chaqueta de niña">
+            <option value="Chándal de niña">
+            <option value="Conjunto de niña">
+            <option value="Conjunto de ropa interior de niña">
+            <option value="Conjunto dos piezas de niña">
+            <option value="Bañador de niña">
+            <option value="Zapatos de niña">
+            <!-- Niño -->
+            <option value="Camisa de niño">
+            <option value="Camiseta de niño">
+            <option value="Pantalón de niño">
+            <option value="Chaqueta de niño">
+            <option value="Chándal de niño">
+            <option value="Conjunto de niño">
+            <option value="Conjunto de ropa interior de niño">
+            <option value="Conjunto dos piezas de niño">
+            <option value="Bañador de niño">
+            <option value="Zapatos de niño">
+          </datalist>
+        </div>
+
+        <div class="field">
+          <label>Fotos de la prenda</label>
+          <input type="file" id="f_imageFile" accept="image/*" multiple style="display:none;">
+          <button type="button" id="pickImageBtn" class="upload-btn">📁 Añadir fotos desde tu PC</button>
+          <div class="image-preview" id="imagePreview">Sin fotos seleccionadas</div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Precio (DH)</label>
+            <input type="number" id="f_price" min="0" step="0.01" placeholder="197" required>
+          </div>
+          <div class="field">
+            <label>Precio anterior (tachado)</label>
+            <input type="number" id="f_priceOld" min="0" step="0.01" placeholder="294">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Categoría</label>
+          <select id="f_category">
+            <optgroup label="Mujer">
+              <option>Vestidos</option>
+              <option>Blusas y camisas</option>
+              <option>Pantalones y vaqueros</option>
+              <option>Faldas</option>
+              <option>Abrigos y chaquetas</option>
+              <option>Punto y sudaderas</option>
+              <option>Ropa deportiva</option>
+              <option>Ropa de baño</option>
+              <option>Lencería y pijamas</option>
+              <option>Conjuntos de ropa interior</option>
+              <option>Conjuntos de dos piezas</option>
+              <option>Calzado</option>
+              <option>Mujer curvy</option>
+              <option>Ropa de talla grande</option>
+            </optgroup>
+            <optgroup label="Accesorios y otros">
+              <option>Joyería y accesorios</option>
+              <option>Bolsas y equipaje</option>
+              <option>Belleza y salud</option>
+            </optgroup>
+            <optgroup label="Hombre">
+              <option>Camisas de hombre</option>
+              <option>Camisetas y polos</option>
+              <option>Pantalones de hombre</option>
+              <option>Punto y sudaderas de hombre</option>
+              <option>Ropa deportiva de hombre</option>
+              <option>Trajes de baño de hombre</option>
+              <option>Ropa interior de hombre</option>
+              <option>Conjuntos de dos piezas de hombre</option>
+              <option>Calzado de hombre</option>
+            </optgroup>
+            <optgroup label="Niña">
+              <option>Vestidos de niña</option>
+              <option>Blusas y camisas de niña</option>
+              <option>Pantalones de niña</option>
+              <option>Faldas de niña</option>
+              <option>Ropa deportiva de niña</option>
+              <option>Ropa de baño de niña</option>
+              <option>Ropa interior de niña</option>
+              <option>Conjuntos de dos piezas de niña</option>
+              <option>Calzado de niña</option>
+            </optgroup>
+            <optgroup label="Niño">
+              <option>Camisas y camisetas de niño</option>
+              <option>Pantalones de niño</option>
+              <option>Ropa deportiva de niño</option>
+              <option>Ropa de baño de niño</option>
+              <option>Ropa interior de niño</option>
+              <option>Conjuntos de dos piezas de niño</option>
+              <option>Calzado de niño</option>
+            </optgroup>
+            <optgroup label="Departamentos">
+              <option>Hombres</option>
+              <option>Mujer</option>
+              <option>Hogar</option>
+              <option>Joyería</option>
+              <option>Deportes</option>
+              <option>Niños</option>
+              <option>Bolsos</option>
+              <option>Electrónica</option>
+              <option>Industria</option>
+              <option>Belleza</option>
+              <option>Manualidades</option>
+              <option>Juguetes</option>
+              <option>Oficina</option>
+              <option>Bebé</option>
+              <option>Coche y moto</option>
+              <option>Salud</option>
+              <option>Jardín</option>
+              <option>Limpieza</option>
+              <option>Mascotas</option>
+              <option>Musical</option>
+              <option>Electrodomésticos</option>
+              <option>Comida</option>
+              <option>Libros</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Colores disponibles</label>
+          <div class="color-input-row">
+            <input type="color" id="f_colorPicker" value="#FF6A00" style="display:none;">
+            <input type="text" id="f_colorName" placeholder="Nombre del color (ej: Rosa palo)" style="display:none;">
+            <button type="button" id="addColorBtn" style="display:none;">Añadir</button>
+            <button type="button" class="palette-btn" id="openPaletteBtn">🎨 Paleta</button>
+            <div class="color-palette" id="colorPalette"></div>
+          </div>
+          <div class="chip-list" id="colorChips"></div>
+          <div class="color-image-picker" id="colorImagePicker"></div>
+        </div>
+
+        <div class="field">
+          <label>Tallas disponibles</label>
+          <div class="size-options" id="sizeOptions"></div>
+        </div>
+
+        <div class="field">
+          <label>Material</label>
+          <div class="check-options" id="materialOptions">
+            <label class="check-opt"><input type="checkbox" data-material="Poliéster"> Poliéster</label>
+            <label class="check-opt"><input type="checkbox" data-material="Algodón"> Algodón</label>
+            <label class="check-opt"><input type="checkbox" data-material="Lyocell"> Lyocell</label>
+            <label class="check-opt"><input type="checkbox" data-material="Mezcla de algodón"> Mezcla de algodón</label>
+            <label class="check-opt"><input type="checkbox" data-material="Tencel"> Tencel</label>
+            <label class="check-opt"><input type="checkbox" data-material="Viscosa"> Viscosa</label>
+            <label class="check-opt"><input type="checkbox" data-material="Acetato"> Acetato</label>
+            <label class="check-opt"><input type="checkbox" data-material="Seda de mora"> Seda de mora</label>
+            <label class="check-opt"><input type="checkbox" data-material="Ramina"> Ramina</label>
+            <label class="check-opt"><input type="checkbox" data-material="Modal"> Modal</label>
+            <label class="check-opt"><input type="checkbox" data-material="Satín"> Satín</label>
+            <label class="check-opt"><input type="checkbox" data-material="Gasa"> Gasa</label>
+            <label class="check-opt"><input type="checkbox" data-material="Rayón"> Rayón</label>
+            <label class="check-opt"><input type="checkbox" data-material="Saco tejido"> Saco tejido</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Temporada</label>
+          <div class="check-options" id="seasonOptions">
+            <label class="check-opt"><input type="checkbox" data-season="Primavera"> Primavera</label>
+            <label class="check-opt"><input type="checkbox" data-season="Verano"> Verano</label>
+            <label class="check-opt"><input type="checkbox" data-season="Otoño"> Otoño</label>
+            <label class="check-opt"><input type="checkbox" data-season="Invierno"> Invierno</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Detalles / descripción</label>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+            <button type="button" id="autoDescBtn" style="background:var(--orange);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;white-space:nowrap;">✨ Generar descripción exacta</button>
+            <span style="font-size:12px;color:var(--gray-text);">Usa el nombre, la categoría y los colores ya elegidos</span>
+          </div>
+          <textarea id="f_details" placeholder="Corte, cuidado, ajuste..."></textarea>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Unidades disponibles</label>
+            <input type="number" id="f_stock" min="0" placeholder="10">
+          </div>
+          <div class="field">
+            <label>Nº de ventas (opcional)</label>
+            <input type="number" id="f_sales" min="0" placeholder="0">
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">+ Añadir al catálogo</button>
+        <button type="button" class="cancel-edit" id="cancelEditBtn" style="display:none;">Cancelar edición</button>
+      </form>
+    </div>
+
+    <!-- ===== PRODUCT LIST ===== -->
+    <div>
+      <div class="list-header">
+        <h2>Catálogo actual</h2>
+        <span class="count" id="productCount">0 modelos</span>
+      </div>
+      <div class="product-grid" id="productGrid"></div>
+    </div>
+
+  </div>
+
+  </div>
+
+<script>
+  // ===== Control de acceso por contraseña =====
+  const ADMIN_PASSWORD_DEFAULT = 'hamioui390719';
+  const PASSWORD_KEY = 'petraTexAdminPassword';
+  function getAdminPassword(){
+    return localStorage.getItem(PASSWORD_KEY) || ADMIN_PASSWORD_DEFAULT;
+  }
+  function setAdminPassword(newPass){
+    localStorage.setItem(PASSWORD_KEY, newPass);
+  }
+  const AUTH_KEY = 'petraTexAdminAuth';
+  const lockScreen = document.getElementById('lockScreen');
+  const adminContent = document.getElementById('adminContent');
+  const lockPassword = document.getElementById('lockPassword');
+  const lockError = document.getElementById('lockError');
+  const lockSubmit = document.getElementById('lockSubmit');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  // 📌 Recuperación de contraseña por Gmail (EmailJS).
+  // El plan gratuito de EmailJS solo permite 2 plantillas, y las 2 ya están
+  // usadas (aviso de pedido + agradecimiento al cliente). Por eso, en vez de
+  // crear una plantilla nueva (que pediría pagar), reutilizamos la plantilla
+  // de "aviso de pedido" (template_8yk3o72), que ya envía a rainatex3@gmail.com.
+  // Metemos el texto de la contraseña dentro de sus mismas variables.
+  const EMAILJS_SERVICE_ID = 'petratexSeat390719++';
+  const EMAILJS_PUBLIC_KEY = 'ajrxglbiDOwJyrFG9';
+  const EMAILJS_TEMPLATE_RECOVERY_ID = 'template_8yk3o72'; // plantilla de pedidos, reutilizada
+  const RECOVERY_EMAIL = 'rainatex3@gmail.com';
+  if(window.emailjs){ emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); }
+
+  function showAdmin(){
+    lockScreen.style.display = 'none';
+    adminContent.style.display = 'block';
+  }
+  function showLock(){
+    adminContent.style.display = 'none';
+    lockScreen.style.display = 'flex';
+    lockPassword.value = '';
+    lockError.classList.remove('show');
+    lockPassword.focus();
+  }
+
+  function tryLogin(){
+    if(lockPassword.value === getAdminPassword()){
+      sessionStorage.setItem(AUTH_KEY, 'ok');
+      showAdmin();
+    } else {
+      lockError.classList.add('show');
+    }
+  }
+
+  lockSubmit.addEventListener('click', tryLogin);
+  lockPassword.addEventListener('keydown', (e) => { if(e.key === 'Enter') tryLogin(); });
+
+  // ===== Recuperación de contraseña =====
+  const lockForgotLink = document.getElementById('lockForgotLink');
+  const lockRecoverBtn = document.getElementById('lockRecoverBtn');
+  const lockRecovery = document.getElementById('lockRecovery');
+  const lockRecoverySend = document.getElementById('lockRecoverySend');
+  const lockRecoveryBack = document.getElementById('lockRecoveryBack');
+  const lockSentMsg = document.getElementById('lockSentMsg');
+
+  function openRecoveryPanel(e){
+    if(e) e.preventDefault();
+    lockRecovery.classList.add('show');
+    lockSentMsg.classList.remove('show');
+  }
+
+  lockForgotLink.addEventListener('click', openRecoveryPanel);
+  lockRecoverBtn.addEventListener('click', openRecoveryPanel);
+
+  lockRecoveryBack.addEventListener('click', () => {
+    lockRecovery.classList.remove('show');
+  });
+
+  lockRecoverySend.addEventListener('click', () => {
+    if(!window.emailjs || !EMAILJS_TEMPLATE_RECOVERY_ID){
+      alert('La recuperación por correo aún no está activada. Contacta con quien gestiona la web.');
+      return;
+    }
+    lockRecoverySend.disabled = true;
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_RECOVERY_ID, {
+      cliente_email: RECOVERY_EMAIL,
+      cliente_telefono: '-',
+      cliente_direccion: 'Recuperación de contraseña — Panel de administración Petra Tex',
+      detalle_pedido: `Has solicitado recuperar la contraseña del panel de administración.\nTu contraseña actual es: ${getAdminPassword()}`,
+      total: '',
+    }).then(() => {
+      lockSentMsg.classList.add('show');
+      lockRecoverySend.disabled = false;
+    }).catch(err => {
+      console.error('Error al enviar la contraseña por correo:', err);
+      alert('No se pudo enviar el correo. Inténtalo de nuevo.');
+      lockRecoverySend.disabled = false;
+    });
+  });
+
+  logoutBtn.addEventListener('click', () => {
+    sessionStorage.removeItem(AUTH_KEY);
+    showLock();
+  });
+
+  // ===== Cambiar contraseña =====
+  const changePasswordBtn = document.getElementById('changePasswordBtn');
+  const changePassOverlay = document.getElementById('changePassOverlay');
+  const cpOldPassword = document.getElementById('cpOldPassword');
+  const cpNewPassword = document.getElementById('cpNewPassword');
+  const cpConfirmPassword = document.getElementById('cpConfirmPassword');
+  const cpError = document.getElementById('cpError');
+  const cpSuccess = document.getElementById('cpSuccess');
+  const cpSaveBtn = document.getElementById('cpSaveBtn');
+  const cpCancelBtn = document.getElementById('cpCancelBtn');
+
+  function openChangePassModal(){
+    cpOldPassword.value = '';
+    cpNewPassword.value = '';
+    cpConfirmPassword.value = '';
+    cpError.classList.remove('show');
+    cpSuccess.classList.remove('show');
+    changePassOverlay.classList.add('show');
+    cpOldPassword.focus();
+  }
+  function closeChangePassModal(){
+    changePassOverlay.classList.remove('show');
+  }
+
+  changePasswordBtn.addEventListener('click', openChangePassModal);
+  cpCancelBtn.addEventListener('click', closeChangePassModal);
+  changePassOverlay.addEventListener('click', (e) => {
+    if(e.target === changePassOverlay) closeChangePassModal();
+  });
+
+  cpSaveBtn.addEventListener('click', () => {
+    cpError.classList.remove('show');
+    cpSuccess.classList.remove('show');
+
+    if(cpOldPassword.value !== getAdminPassword()){
+      cpError.textContent = 'La contraseña antigua no es correcta.';
+      cpError.classList.add('show');
+      return;
+    }
+    if(cpNewPassword.value.length < 12){
+      cpError.textContent = 'La nueva contraseña debe tener al menos 12 caracteres.';
+      cpError.classList.add('show');
+      return;
+    }
+    if(!/[a-z]/.test(cpNewPassword.value)){
+      cpError.textContent = 'La nueva contraseña debe incluir al menos una letra minúscula.';
+      cpError.classList.add('show');
+      return;
+    }
+    if(!/[A-Z]/.test(cpNewPassword.value)){
+      cpError.textContent = 'La nueva contraseña debe incluir al menos una letra mayúscula.';
+      cpError.classList.add('show');
+      return;
+    }
+    if(!/[0-9]/.test(cpNewPassword.value)){
+      cpError.textContent = 'La nueva contraseña debe incluir al menos un número.';
+      cpError.classList.add('show');
+      return;
+    }
+    if(!/[^A-Za-z0-9]/.test(cpNewPassword.value)){
+      cpError.textContent = 'La nueva contraseña debe incluir al menos un símbolo (ej: ! @ # $ %).';
+      cpError.classList.add('show');
+      return;
+    }
+    if(cpNewPassword.value !== cpConfirmPassword.value){
+      cpError.textContent = 'La nueva contraseña y la confirmación no coinciden.';
+      cpError.classList.add('show');
+      return;
+    }
+
+    setAdminPassword(cpNewPassword.value);
+    cpSuccess.classList.add('show');
+    cpOldPassword.value = '';
+    cpNewPassword.value = '';
+    cpConfirmPassword.value = '';
+    setTimeout(closeChangePassModal, 1500);
+  });
+
+  // Si ya se ha iniciado sesión en esta pestaña, entra directo; si no, pide contraseña
+  if(sessionStorage.getItem(AUTH_KEY) === 'ok'){
+    showAdmin();
+  } else {
+    showLock();
+  }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ===== Almacén de productos: Supabase (base de datos en la nube, compartida por todos los dispositivos) =====
+  const SUPABASE_URL = 'https://ortnsekmoxnxxyklxcsr.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_uGJm-mdrUHz3qVpjvVRZzg_cg0BgZfO';
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('petraTexSync') : null;
+
+  // Convierte un producto del formato de la app (camelCase) al formato de la tabla de Supabase (snake_case)
+  function toSupabaseRow(p){
+    return {
+      id: p.id,
+      name: p.name,
+      images: p.images || [],
+      image: p.image || '',
+      price: p.price,
+      price_old: p.priceOld,
+      category: p.category,
+      colors: p.colors || [],
+      sizes: p.sizes || [],
+      material: p.material || '',
+      temporada: p.temporada || '',
+      details: p.details || '',
+      stock: p.stock || 0,
+      sales: p.sales || 0,
+    };
+  }
+  function fromSupabaseRow(row){
+    return {
+      id: row.id,
+      name: row.name,
+      images: row.images || [],
+      image: row.image || (row.images && row.images[0]) || '',
+      price: row.price,
+      priceOld: row.price_old,
+      category: row.category,
+      colors: row.colors || [],
+      sizes: row.sizes || [],
+      material: row.material || '',
+      temporada: row.temporada || '',
+      details: row.details || '',
+      stock: row.stock || 0,
+      sales: row.sales || 0,
+    };
+  }
+
+  async function dbGetAll(){
+    const { data, error } = await supabaseClient.from('products').select('*').order('created_at', { ascending: true });
+    if(error){ console.error('Error cargando productos de Supabase:', error); return []; }
+    return (data || []).map(fromSupabaseRow);
+  }
+  async function dbPut(product){
+    const { error } = await supabaseClient.from('products').upsert(toSupabaseRow(product));
+    if(error){ console.error('Error guardando producto en Supabase:', error); throw error; }
+    return true;
+  }
+  async function dbDelete(id){
+    const { error } = await supabaseClient.from('products').delete().eq('id', id);
+    if(error){ console.error('Error borrando producto en Supabase:', error); throw error; }
+    return true;
+  }
+  async function dbPutAll(productsArray){
+    const { error } = await supabaseClient.from('products').upsert(productsArray.map(toSupabaseRow));
+    if(error){ console.error('Error importando productos a Supabase:', error); throw error; }
+    return true;
+  }
+  // Ya no hace falta migrar nada de localStorage/IndexedDB: los datos viven en Supabase
+  async function migrateLegacyStorage(){ /* no-op */ }
+  function notifyProductsChanged(){
+    if(syncChannel) syncChannel.postMessage('changed');
+  }
+
+  let products = [];
+
+  async function initProducts(){
+    await migrateLegacyStorage();
+    try{
+      products = await dbGetAll();
+    }catch(e){
+      products = [];
+    }
+    renderProducts();
+    migrateOldImages();
+  }
+
+  if(syncChannel){
+    syncChannel.onmessage = async () => {
+      products = await dbGetAll();
+      renderProducts();
+    };
+  }
+
+  // ===== Copia de seguridad (exportar / importar catálogo + fotos) =====
+  document.getElementById('exportBackupBtn').addEventListener('click', async () => {
+    try{
+      const allProducts = await dbGetAll();
+      const backup = {
+        app: 'petraTex',
+        exportedAt: new Date().toISOString(),
+        productCount: allProducts.length,
+        products: allProducts,
+      };
+      const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const fecha = new Date().toISOString().slice(0,10);
+      a.href = url;
+      a.download = `petra-tex-backup-${fecha}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }catch(e){
+      console.error(e);
+      alert('No se pudo crear la copia de seguridad. Revisa la consola para más detalles.');
+    }
+  });
+
+  const importBackupFile = document.getElementById('importBackupFile');
+  document.getElementById('importBackupBtn').addEventListener('click', () => importBackupFile.click());
+  importBackupFile.addEventListener('change', async () => {
+    const file = importBackupFile.files && importBackupFile.files[0];
+    importBackupFile.value = '';
+    if(!file) return;
+    try{
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const importedProducts = Array.isArray(data) ? data : (Array.isArray(data.products) ? data.products : null);
+      if(!importedProducts) throw new Error('Formato de archivo no reconocido');
+
+      const replace = confirm(
+        `Se encontraron ${importedProducts.length} prendas en el archivo.\n\n` +
+        `Pulsa "Aceptar" para AÑADIR estas prendas a tu catálogo actual (se mantienen las que ya tienes).\n` +
+        `Pulsa "Cancelar" y vuelve a intentarlo si prefieres no importar nada.`
+      );
+      if(!replace) return;
+
+      await dbPutAll(importedProducts);
+      products = await dbGetAll();
+      renderProducts();
+      notifyProductsChanged();
+      alert(`Copia de seguridad importada correctamente (${importedProducts.length} prendas).`);
+    }catch(e){
+      console.error(e);
+      alert('No se pudo importar el archivo. Asegúrate de que sea una copia de seguridad exportada desde Petra Tex.');
+    }
+  });
+
+  // ----- tallas: adultos vs niños/niñas -----
+  const ADULT_SIZES = ['XS','S','M','L','XXL','3XL','4XL'];
+  const KIDS_SIZES = ['86-92','92-98','98-104','104-110','110-116','116-122','122-128','128-134','134-140','140-146','146-150'];
+  const KIDS_SIZE_INFO = {
+    '86-92':   { edad:'12-24 meses', pecho:'53', cintura:'51', largo:'38' },
+    '92-98':   { edad:'2 años',      pecho:'55', cintura:'52', largo:'41' },
+    '98-104':  { edad:'3-4 años',    pecho:'57', cintura:'53', largo:'44' },
+    '104-110': { edad:'5 años',      pecho:'59', cintura:'54', largo:'47' },
+    '110-116': { edad:'6 años',      pecho:'61', cintura:'55', largo:'50' },
+    '116-122': { edad:'7 años',      pecho:'63', cintura:'56', largo:'53' },
+    '122-128': { edad:'8 años',      pecho:'66', cintura:'57', largo:'56' },
+    '128-134': { edad:'9 años',      pecho:'69', cintura:'59', largo:'59' },
+    '134-140': { edad:'10 años',     pecho:'72', cintura:'61', largo:'62' },
+    '140-146': { edad:'11 años',     pecho:'75', cintura:'63', largo:'65' },
+    '146-150': { edad:'12 años',     pecho:'78', cintura:'65', largo:'68' },
+  };
+  let currentSizeType = 'adult';
+
+  function getSizeTypeForCategoryValue(categoryText){
+    const catSelect = document.getElementById('f_category');
+    const opt = Array.from(catSelect.options).find(o => o.value === categoryText || o.textContent === categoryText);
+    const groupLabel = opt && opt.parentElement && opt.parentElement.tagName === 'OPTGROUP' ? opt.parentElement.label : '';
+    return (groupLabel === 'Niño' || groupLabel === 'Niña') ? 'kids' : 'adult';
+  }
+
+  function renderSizeOptions(type){
+    currentSizeType = type;
+    const list = type === 'kids' ? KIDS_SIZES : ADULT_SIZES;
+    sizeOptions.innerHTML = list.map(s => {
+      const info = KIDS_SIZE_INFO[s];
+      if(!info) return `<div class="size-opt" data-size="${s}">${s}</div>`;
+      return `<div class="size-opt-wrap">
+        <div class="size-opt" data-size="${s}">${s}</div>
+        <span class="size-opt-tip">Equivale a talla <b>${info.edad}</b><br>Pecho: ${info.pecho} cm &nbsp;·&nbsp; Cintura: ${info.cintura} cm &nbsp;·&nbsp; Largo: ${info.largo} cm</span>
+      </div>`;
+    }).join('');
+  }
+
+  let editingId = null;
+  let currentColors = [];
+  let currentSizes = [];
+  let currentMaterials = [];
+  let currentSeasons = [];
+  let currentImages = []; // array de fotos en dataURL; la primera es la portada
+
+  const form = document.getElementById('productForm');
+  const grid = document.getElementById('productGrid');
+  const countEl = document.getElementById('productCount');
+  const colorChips = document.getElementById('colorChips');
+  const sizeOptions = document.getElementById('sizeOptions');
+  const materialOptions = document.getElementById('materialOptions');
+  const seasonOptions = document.getElementById('seasonOptions');
+  const formTitle = document.getElementById('formTitle');
+  const submitBtn = document.getElementById('submitBtn');
+  const cancelEditBtn = document.getElementById('cancelEditBtn');
+  const pickImageBtn = document.getElementById('pickImageBtn');
+  const f_imageFile = document.getElementById('f_imageFile');
+  const imagePreview = document.getElementById('imagePreview');
+
+  // ----- fotos desde el PC (galería) -----
+  pickImageBtn.addEventListener('click', () => f_imageFile.click());
+
+  // Redimensiona y comprime una imagen, la sube a Supabase Storage y devuelve su URL pública
+  const MAX_IMG_DIMENSION = 1000; // ancho/alto máximo en píxeles
+  const IMG_QUALITY = 0.72; // calidad JPEG (0-1)
+  const STORAGE_BUCKET = 'product-images';
+
+  function resizeToBlob(file){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if(width > MAX_IMG_DIMENSION || height > MAX_IMG_DIMENSION){
+            if(width > height){
+              height = Math.round(height * (MAX_IMG_DIMENSION / width));
+              width = MAX_IMG_DIMENSION;
+            } else {
+              width = Math.round(width * (MAX_IMG_DIMENSION / height));
+              height = MAX_IMG_DIMENSION;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('No se pudo generar la imagen')), 'image/jpeg', IMG_QUALITY);
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function compressImage(file){
+    const blob = await resizeToBlob(file);
+    const path = `products/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+    const { error } = await supabaseClient.storage.from(STORAGE_BUCKET).upload(path, blob, {
+      contentType: 'image/jpeg',
+      upsert: false,
+    });
+    if(error) throw error;
+    const { data } = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+    return data.publicUrl;
+  }
+
+  f_imageFile.addEventListener('change', async () => {
+    const files = Array.from(f_imageFile.files || []);
+    if(!files.length) return;
+    pickImageBtn.disabled = true;
+    const originalBtnText = pickImageBtn.textContent;
+    let ok = 0;
+    for(const file of files){
+      pickImageBtn.textContent = `⏳ Subiendo foto ${ok+1} de ${files.length}...`;
+      try{
+        const url = await compressImage(file);
+        currentImages.push(url);
+        ok++;
+      }catch(err){
+        console.error('No se pudo subir una foto', err);
+        alert('No se pudo subir una foto. Revisa tu conexión a internet o que el almacenamiento "product-images" esté bien configurado en Supabase.');
+      }
+    }
+    pickImageBtn.disabled = false;
+    pickImageBtn.textContent = originalBtnText;
+    f_imageFile.value = ''; // permite volver a elegir los mismos archivos si hace falta
+    renderImagePreview();
+  });
+
+  function removeImage(index){
+    currentImages.splice(index, 1);
+    renderImagePreview();
+  }
+
+  function makeCover(index){
+    const [img] = currentImages.splice(index, 1);
+    currentImages.unshift(img);
+    renderImagePreview();
+  }
+
+  function moveImage(index, dir){
+    const newIndex = index + dir;
+    if(newIndex < 0 || newIndex >= currentImages.length) return;
+    [currentImages[index], currentImages[newIndex]] = [currentImages[newIndex], currentImages[index]];
+    renderImagePreview();
+  }
+
+  function renderImagePreview(){
+    if(!currentImages.length){
+      imagePreview.innerHTML = 'Sin fotos seleccionadas';
+      return;
+    }
+    imagePreview.innerHTML = `<div class="gallery-grid">
+      ${currentImages.map((img, i) => `
+        <div class="gallery-thumb ${i===0 ? 'cover' : ''}">
+          <img src="${img}" alt="Foto ${i+1}" onclick="makeCover(${i})" title="Clic para poner como foto principal">
+          ${i===0 ? '<span class="cover-tag">Principal</span>' : ''}
+          <span class="remove-thumb" onclick="event.stopPropagation(); removeImage(${i})" title="Quitar foto">✕</span>
+          <div class="thumb-move">
+            <span onclick="event.stopPropagation(); moveImage(${i}, -1)" title="Mover a la izquierda">‹</span>
+            <span onclick="event.stopPropagation(); moveImage(${i}, 1)" title="Mover a la derecha">›</span>
+          </div>
+        </div>
+      `).join('')}
+      <div class="gallery-hint">${currentImages.length} foto${currentImages.length>1?'s':''} · clic en una foto para hacerla principal, o usa ‹ › para reordenar</div>
+    </div>`;
+  }
+
+  // ----- generador de descripción exacta (color, mangas, cuello, bolsillos, tela) -----
+  // Palabras clave por tipo de prenda para elegir qué rasgos físicos mencionar
+  const DESC_FEATURES = [
+    {test:/vestido/i, mangas:true, cuello:true, bolsillos:false, tela:true, ajuste:true},
+    {test:/blusa|camisa|camiseta|polo|top/i, mangas:true, cuello:true, bolsillos:false, tela:true, ajuste:true},
+    {test:/chaqueta|abrigo|chandal|sudadera|jersey/i, mangas:true, cuello:true, bolsillos:true, tela:true, ajuste:true},
+    {test:/pantalon|vaquero|falda/i, mangas:false, cuello:false, bolsillos:true, tela:true, ajuste:true},
+    {test:/conjunto|traje/i, mangas:true, cuello:true, bolsillos:true, tela:true, ajuste:true},
+    {test:/banador|bikini|lenceria|pijama|ropa interior/i, mangas:false, cuello:false, bolsillos:false, tela:true, ajuste:true},
+    {test:/calzado|zapato|sandalia|bota|zapatilla/i, mangas:false, cuello:false, bolsillos:false, tela:true, ajuste:false},
+    {test:/.*/, mangas:false, cuello:false, bolsillos:false, tela:true, ajuste:true}, // por defecto
+  ];
+  const DESC_MANGAS = ['manga larga', 'manga corta', 'manga 3/4', 'sin mangas'];
+  const DESC_CUELLO = ['cuello redondo', 'cuello en V', 'cuello camisero', 'cuello alto'];
+  const DESC_BOLSILLOS = ['con bolsillos laterales', 'con bolsillos delanteros funcionales', 'sin bolsillos visibles'];
+  const DESC_TELA = ['algodón suave', 'tejido transpirable y ligero', 'punto elástico cómodo', 'tela resistente de buena calidad'];
+  const DESC_AJUSTE = ['corte entallado que favorece la silueta', 'corte holgado y cómodo', 'corte recto clásico'];
+  function pick(arr, seed){ return arr[seed % arr.length]; }
+  function hashSeed(str){
+    let h = 0;
+    for(let i=0;i<str.length;i++){ h = (h*31 + str.charCodeAt(i)) >>> 0; }
+    return h;
+  }
+  function generateExactDescription(){
+    const name = document.getElementById('f_name').value.trim();
+    const category = document.getElementById('f_category').value;
+    if(!name){ alert('Escribe primero el nombre de la prenda.'); return; }
+    const seed = hashSeed(name + category);
+    const feat = DESC_FEATURES.find(f => f.test.test(name) || f.test.test(category));
+    const colorNames = currentColors.map(c => c.name).filter(Boolean);
+    const colorText = colorNames.length ? `en color ${colorNames.join(', ')}` : '';
+    const parts = [`${name} ${colorText}`.trim() + ','];
+    if(feat.tela) parts.push(`confeccionado en ${pick(DESC_TELA, seed)}`);
+    if(feat.mangas) parts.push(pick(DESC_MANGAS, seed+1));
+    if(feat.cuello) parts.push(pick(DESC_CUELLO, seed+2));
+    if(feat.bolsillos) parts.push(pick(DESC_BOLSILLOS, seed+3));
+    if(feat.ajuste) parts.push(pick(DESC_AJUSTE, seed+4));
+    const text = parts.join(', ').replace(/,\s*,/g,',') + '. Ideal para uso diario.';
+    document.getElementById('f_details').value = text;
+  }
+  document.getElementById('autoDescBtn').addEventListener('click', generateExactDescription);
+
+  // ----- colores -----
+  document.getElementById('addColorBtn').addEventListener('click', () => {
+    const hex = document.getElementById('f_colorPicker').value;
+    const nameInput = document.getElementById('f_colorName');
+    const name = nameInput.value.trim() || hex;
+    currentColors.push({hex, name});
+    nameInput.value = '';
+    renderColorChips();
+  });
+
+  // ----- paleta de colores predefinidos -----
+  const PRESET_COLORS = [
+    {hex:'#111111', name:'Negro'},
+    {hex:'#FFFFFF', name:'Blanco'},
+    {hex:'#767676', name:'Gris'},
+    {hex:'#B0B0B0', name:'Gris claro'},
+    {hex:'#4A4A4A', name:'Gris oscuro'},
+    {hex:'#D9D2C5', name:'Beige'},
+    {hex:'#EDE4D3', name:'Crema'},
+    {hex:'#F5F0E6', name:'Marfil'},
+    {hex:'#C19A6B', name:'Camel'},
+    {hex:'#8B5E3C', name:'Coñac'},
+    {hex:'#5C4033', name:'Marrón'},
+    {hex:'#3B2A1A', name:'Chocolate'},
+    {hex:'#F4C2C2', name:'Rosa palo'},
+    {hex:'#FF69B4', name:'Rosa fucsia'},
+    {hex:'#FFB6C1', name:'Rosa claro'},
+    {hex:'#E60000', name:'Rojo'},
+    {hex:'#B22222', name:'Rojo ladrillo'},
+    {hex:'#7B1E28', name:'Burdeos'},
+    {hex:'#FF6A00', name:'Naranja'},
+    {hex:'#FFA940', name:'Naranja claro'},
+    {hex:'#F2C300', name:'Amarillo'},
+    {hex:'#FFF176', name:'Amarillo claro'},
+    {hex:'#6B7A3A', name:'Verde oliva'},
+    {hex:'#2E7D32', name:'Verde bosque'},
+    {hex:'#8FD9B6', name:'Verde menta'},
+    {hex:'#A8E063', name:'Verde lima'},
+    {hex:'#1B2A4A', name:'Azul marino'},
+    {hex:'#2E5AAC', name:'Azul rey'},
+    {hex:'#87CEEB', name:'Azul cielo'},
+    {hex:'#B0E0E6', name:'Azul pastel'},
+    {hex:'#30D5C8', name:'Turquesa'},
+    {hex:'#008080', name:'Verde azulado'},
+    {hex:'#6C3483', name:'Morado'},
+    {hex:'#9B59B6', name:'Púrpura'},
+    {hex:'#C8A2C8', name:'Lila'},
+    {hex:'#E6C8E6', name:'Lavanda'},
+    {hex:'#D4AF37', name:'Dorado'},
+    {hex:'#C0C0C0', name:'Plateado'},
+    {hex:'#000080', name:'Índigo'},
+    {hex:'#800020', name:'Granate'},
+    {hex:'#FF7F50', name:'Coral'},
+    {hex:'#40E0D0', name:'Turquesa claro'},
+    {hex:'#DAA520', name:'Mostaza'},
+    {hex:'#556B2F', name:'Caqui oscuro'},
+    {hex:'#C3B091', name:'Caqui'},
+    {hex:'#000000', name:'Negro puro'},
+  ];
+
+  const colorPalette = document.getElementById('colorPalette');
+  colorPalette.innerHTML = PRESET_COLORS.map(c => `
+    <div class="pal-opt" data-hex="${c.hex}" data-name="${c.name}">
+      <span class="swatch" style="background:${c.hex}"></span>${c.name}
+    </div>
+  `).join('');
+
+  document.getElementById('openPaletteBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    colorPalette.classList.toggle('open');
+  });
+
+  colorPalette.addEventListener('click', (e) => {
+    const opt = e.target.closest('.pal-opt');
+    if(!opt) return;
+    currentColors.push({hex: opt.dataset.hex, name: opt.dataset.name});
+    renderColorChips();
+    colorPalette.classList.remove('open');
+  });
+
+  document.addEventListener('click', (e) => {
+    if(!colorPalette.contains(e.target) && e.target.id !== 'openPaletteBtn'){
+      colorPalette.classList.remove('open');
+    }
+  });
+
+  function renderColorChips(){
+    colorChips.innerHTML = currentColors.map((c,i) => `
+      <div class="chip">
+        <span class="swatch ${c.image ? 'has-img' : ''}" style="${c.image ? `background-image:url(${c.image});background-size:cover;` : `background:${c.hex}`}"></span>
+        ${c.name}
+        <span class="cam ${c.image ? 'assigned' : ''}" data-i="${i}" title="Asignar foto de este color">📷</span>
+        <span class="rm" data-i="${i}">✕</span>
+      </div>
+    `).join('');
+    colorChips.querySelectorAll('.rm').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        currentColors.splice(+btn.dataset.i,1);
+        renderColorChips();
+      });
+    });
+    colorChips.querySelectorAll('.cam').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        openColorImagePicker(btn, +btn.dataset.i);
+      });
+    });
+  }
+
+  const colorImagePicker = document.getElementById('colorImagePicker');
+
+  function openColorImagePicker(anchorEl, colorIndex){
+    if(!currentImages.length){
+      colorImagePicker.innerHTML = `<div class="pic-none">Sube primero las fotos de la prenda en "Fotos del producto".</div>`;
+    } else {
+      colorImagePicker.innerHTML = `
+        <div class="hint">Elige la foto para este color:</div>
+        <div class="pic-grid">
+          ${currentImages.map((img,i) => `<div class="pic-opt" data-i="${i}"><img src="${img}" alt="Foto ${i+1}"></div>`).join('')}
+        </div>`;
+    }
+    const rect = anchorEl.getBoundingClientRect();
+    colorImagePicker.style.top = `${rect.bottom + 6}px`;
+    colorImagePicker.style.left = `${Math.min(rect.left, window.innerWidth - 236)}px`;
+    colorImagePicker.classList.add('open');
+    colorImagePicker.dataset.colorIndex = colorIndex;
+  }
+
+  colorImagePicker.addEventListener('click', (e) => {
+    const opt = e.target.closest('.pic-opt');
+    if(!opt) return;
+    const colorIndex = +colorImagePicker.dataset.colorIndex;
+    currentColors[colorIndex].image = currentImages[+opt.dataset.i];
+    renderColorChips();
+    colorImagePicker.classList.remove('open');
+  });
+
+  document.addEventListener('click', (e) => {
+    if(!colorImagePicker.contains(e.target) && !e.target.classList.contains('cam')){
+      colorImagePicker.classList.remove('open');
+    }
+  });
+
+  // ----- tallas: cambiar según categoría -----
+  document.getElementById('f_category').addEventListener('change', (e)=>{
+    const newType = getSizeTypeForCategoryValue(e.target.value);
+    if(newType !== currentSizeType){
+      currentSizes = [];
+      renderSizeOptions(newType);
+    }
+  });
+
+  // ----- tallas -----
+  sizeOptions.addEventListener('click', (e)=>{
+    const opt = e.target.closest('.size-opt');
+    if(!opt) return;
+    const size = opt.dataset.size;
+    if(currentSizes.includes(size)){
+      currentSizes = currentSizes.filter(s=>s!==size);
+      opt.classList.remove('selected');
+    } else {
+      currentSizes.push(size);
+      opt.classList.add('selected');
+    }
+  });
+
+  // ----- materiales -----
+  materialOptions.addEventListener('change', (e)=>{
+    const cb = e.target.closest('input[data-material]');
+    if(!cb) return;
+    const mat = cb.dataset.material;
+    if(cb.checked){
+      if(!currentMaterials.includes(mat)) currentMaterials.push(mat);
+    } else {
+      currentMaterials = currentMaterials.filter(m=>m!==mat);
+    }
+  });
+
+  // ----- temporadas -----
+  seasonOptions.addEventListener('change', (e)=>{
+    const cb = e.target.closest('input[data-season]');
+    if(!cb) return;
+    const season = cb.dataset.season;
+    if(cb.checked){
+      if(!currentSeasons.includes(season)) currentSeasons.push(season);
+    } else {
+      currentSeasons = currentSeasons.filter(s=>s!==season);
+    }
+  });
+
+  // ----- submit -----
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const data = {
+      id: editingId || 'p_' + Date.now(),
+      name: document.getElementById('f_name').value.trim(),
+      images: [...currentImages],
+      image: currentImages[0] || '', // compatibilidad: portada usada en tarjetas de catálogo
+      price: parseFloat(document.getElementById('f_price').value) || 0,
+      priceOld: parseFloat(document.getElementById('f_priceOld').value) || null,
+      category: document.getElementById('f_category').value,
+      colors: [...currentColors],
+      sizes: [...currentSizes],
+      material: currentMaterials.join(', '),
+      temporada: currentSeasons.join(', '),
+      details: document.getElementById('f_details').value.trim(),
+      stock: parseInt(document.getElementById('f_stock').value) || 0,
+      sales: parseInt(document.getElementById('f_sales').value) || 0,
+    };
+
+    const previousProducts = products;
+    if(editingId){
+      products = products.map(p => p.id === editingId ? data : p);
+    } else {
+      products = [...products, data];
+    }
+
+    try{
+      await dbPut(data);
+    }catch(err){
+      products = previousProducts; // revertir: no se guardó, no perdemos el estado anterior
+      alert('No se pudo guardar la prenda. Puede que el navegador se haya quedado sin espacio en el disco.');
+      return;
+    }
+    notifyProductsChanged();
+    resetForm();
+    renderProducts();
+  });
+
+  cancelEditBtn.addEventListener('click', resetForm);
+
+  function resetForm(){
+    form.reset();
+    currentColors = [];
+    currentSizes = [];
+    currentMaterials = [];
+    currentSeasons = [];
+    currentImages = [];
+    editingId = null;
+    renderColorChips();
+    renderImagePreview();
+    renderSizeOptions(getSizeTypeForCategoryValue(document.getElementById('f_category').value));
+    materialOptions.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=false);
+    seasonOptions.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=false);
+    formTitle.textContent = 'Añadir nueva prenda';
+    submitBtn.textContent = '+ Añadir al catálogo';
+    cancelEditBtn.style.display = 'none';
+  }
+
+  function editProduct(id){
+    const p = products.find(x=>x.id===id);
+    if(!p) return;
+    editingId = id;
+    document.getElementById('f_name').value = p.name;
+    currentImages = (p.images && p.images.length) ? [...p.images] : (p.image ? [p.image] : []);
+    renderImagePreview();
+    document.getElementById('f_price').value = p.price;
+    document.getElementById('f_priceOld').value = p.priceOld || '';
+    document.getElementById('f_category').value = p.category;
+    document.getElementById('f_details').value = p.details;
+    document.getElementById('f_stock').value = p.stock;
+    document.getElementById('f_sales').value = p.sales;
+    currentColors = [...p.colors];
+    currentSizes = [...p.sizes];
+    currentMaterials = (p.material || '').split(',').map(s=>s.trim()).filter(Boolean);
+    currentSeasons = (p.temporada || '').split(',').map(s=>s.trim()).filter(Boolean);
+    renderColorChips();
+    renderSizeOptions(getSizeTypeForCategoryValue(p.category));
+    sizeOptions.querySelectorAll('.size-opt').forEach(o=>{
+      o.classList.toggle('selected', currentSizes.includes(o.dataset.size));
+    });
+    materialOptions.querySelectorAll('input[data-material]').forEach(cb=>{
+      cb.checked = currentMaterials.includes(cb.dataset.material);
+    });
+    seasonOptions.querySelectorAll('input[data-season]').forEach(cb=>{
+      cb.checked = currentSeasons.includes(cb.dataset.season);
+    });
+    formTitle.textContent = 'Editar prenda';
+    submitBtn.textContent = 'Guardar cambios';
+    cancelEditBtn.style.display = 'block';
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  async function deleteProduct(id){
+    if(!confirm('¿Quitar esta prenda del catálogo?')) return;
+    products = products.filter(p=>p.id!==id);
+    if(editingId === id) resetForm();
+    try{ await dbDelete(id); }catch(e){}
+    notifyProductsChanged();
+    renderProducts();
+  }
+
+  // Convierte una foto guardada en base64 (dataURL) en un archivo real dentro de
+  // Supabase Storage, redimensionada/comprimida igual que las fotos nuevas, y
+  // devuelve la URL pública para guardar en la base de datos en vez del base64.
+  function dataUrlToStorageUrl(dataUrl){
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if(width > MAX_IMG_DIMENSION || height > MAX_IMG_DIMENSION){
+          if(width > height){
+            height = Math.round(height * (MAX_IMG_DIMENSION / width));
+            width = MAX_IMG_DIMENSION;
+          } else {
+            width = Math.round(width * (MAX_IMG_DIMENSION / height));
+            height = MAX_IMG_DIMENSION;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(async (blob) => {
+          if(!blob){ resolve(dataUrl); return; }
+          try{
+            const path = `products/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+            const { error } = await supabaseClient.storage.from(STORAGE_BUCKET).upload(path, blob, {
+              contentType: 'image/jpeg',
+              upsert: false,
+            });
+            if(error){ console.error('[migración fotos] Error al subir a Storage:', error); resolve(dataUrl); return; }
+            const { data } = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+            console.log('[migración fotos] Foto subida correctamente:', data.publicUrl);
+            resolve(data.publicUrl);
+          }catch(e){
+            // si falla la subida, dejamos la foto como estaba para no perderla
+            console.error('[migración fotos] Excepción al subir foto:', e);
+            resolve(dataUrl);
+          }
+        }, 'image/jpeg', IMG_QUALITY);
+      };
+      // si la imagen no carga por algún motivo, se deja como estaba
+      img.onerror = () => resolve(dataUrl);
+      img.src = dataUrl;
+    });
+  }
+
+  // Convierte las fotos de prendas antiguas (guardadas como base64 dentro de la
+  // base de datos, antes de esta mejora) en archivos reales de Supabase Storage,
+  // para que la tienda cargue mucho más rápido. El cliente no tiene que hacer nada.
+  async function migrateOldImages(){
+    const changedProducts = [];
+    for(const p of products){
+      if(!p.images || !p.images.length) continue;
+      const newImages = [];
+      let productChanged = false;
+      for(const img of p.images){
+        // solo migramos lo que sigue siendo base64 (las que ya son URL no se tocan)
+        if(typeof img === 'string' && img.startsWith('data:')){
+          newImages.push(await dataUrlToStorageUrl(img));
+          productChanged = true;
+        } else {
+          newImages.push(img);
+        }
+      }
+      if(productChanged){
+        p.images = newImages;
+        p.image = newImages[0] || '';
+        changedProducts.push(p);
+      }
+    }
+    if(changedProducts.length){
+      console.log('[migración fotos] Productos con fotos antiguas encontrados:', changedProducts.length);
+      try{
+        await dbPutAll(changedProducts);
+        notifyProductsChanged();
+        console.log('[migración fotos] Guardado en la base de datos correctamente. Migración completa.');
+      }catch(e){
+        // si falla, el catálogo en memoria sigue actualizado; se reintentará en la próxima carga
+        console.error('[migración fotos] Error al guardar en la base de datos:', e);
+      }
+      renderProducts();
+    } else {
+      console.log('[migración fotos] No se encontraron fotos antiguas en base64. Nada que migrar.');
+    }
+  }
+
+  function renderProducts(){
+    countEl.textContent = products.length + (products.length===1 ? ' modelo' : ' modelos');
+
+    if(products.length === 0){
+      grid.innerHTML = `<div class="empty-state">Aún no has añadido ninguna prenda.<br>Usa el formulario de la izquierda para crear el primer modelo.</div>`;
+      return;
+    }
+
+    grid.innerHTML = products.map(p => `
+      <div class="product-card">
+        <div class="img" style="position:relative;">
+          ${p.image ? `<img src="${p.image}" alt="${p.name}" onerror="this.parentElement.innerHTML='Sin imagen'">` : 'Sin imagen'}
+          ${(p.images && p.images.length > 1) ? `<span style="position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.7);color:#fff;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:10px;">📷 ${p.images.length}</span>` : ''}
+        </div>
+        <div class="body">
+          <div class="name">${p.name || 'Sin nombre'}</div>
+          <div class="cat">${p.category}</div>
+          <div class="price-row">
+            <span class="price">${p.price} DH</span>
+            ${p.priceOld ? `<span class="price-old">${p.priceOld} DH</span>` : ''}
+          </div>
+          ${p.colors.length ? `<div class="swatches">${p.colors.map(c=>`<span class="sw" style="background:${c.hex}" title="${c.name}"></span>`).join('')}</div>` : ''}
+          ${p.sizes.length ? `<div class="sizes-tag">Tallas: ${p.sizes.join(', ')}</div>` : ''}
+          <div class="stock ${p.stock>0 ? 'in':'out'}">${p.stock>0 ? p.stock+' disponibles' : 'Sin stock'}</div>
+          <div class="actions">
+            <button class="btn-edit" onclick="editProduct('${p.id}')">Editar</button>
+            <button class="btn-delete" onclick="deleteProduct('${p.id}')">Quitar</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  renderSizeOptions(getSizeTypeForCategoryValue(document.getElementById('f_category').value));
+  initProducts();
+</script>
+
+</body>
+</html>
