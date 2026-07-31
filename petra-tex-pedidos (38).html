@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PETRA - Pedidos recibidos</title>
+<style>
+  :root{
+    --orange:#FF6A00;
+    --orange-dark:#E85A00;
+    --black:#111111;
+    --gray-text:#767676;
+    --gray-border:#E5E5E5;
+    --bg:#F6F5FB;
+    --green:#1B9A5B;
+    --red:#D6362B;
+    --blue:#3D6BFF;
+    --purple:#8B5CF6;
+    --pink:#FF4D8D;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:"Helvetica Neue",Arial,sans-serif;}
+  body{background:linear-gradient(160deg,#F6F5FB 0%,#FDF3F6 45%,#F2F6FF 100%);color:var(--black);min-height:100vh;}
+  a{text-decoration:none;color:inherit;}
+  button{cursor:pointer;border:none;font-family:inherit;}
+  input,select,textarea{font-family:inherit;}
+
+  /* HEADER */
+  header{
+    background:#111;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 28px;
+    flex-wrap:wrap;
+    row-gap:10px;
+    position:sticky;
+    top:0;
+    z-index:400;
+    min-height:70px;
+  }
+  header .logo{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    display:flex;align-items:center;gap:14px;
+  }
+  header .logo .mark{
+    width:52px;height:52px;background:var(--orange);border-radius:12px;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;
+  }
+  header .logo .name{font-weight:900;font-size:34px;letter-spacing:1px;color:var(--orange);}
+  header .title{font-size:14px;color:#bdbdbd;}
+  header .back{
+    background:transparent;
+    color:#fff;
+    border:1px solid #444;
+    padding:8px 16px;
+    border-radius:20px;
+    font-size:13px;
+    font-weight:600;
+  }
+  header .back:hover{border-color:var(--orange);color:var(--orange);}
+  .logout-btn{
+    background:transparent;
+    border:1px solid #444;
+    color:#fff;
+    font-size:12.5px;
+    font-weight:700;
+    padding:8px 14px;
+    border-radius:8px;
+    margin-left:10px;
+  }
+  .logout-btn:hover{border-color:var(--red);color:var(--red);}
+
+  .page-wrap{max-width:1320px;margin:0 auto;padding:24px 20px 60px;}
+  #pedidosContent{display:none;}
+
+  /* ===== PANTALLA DE ACCESO (contraseña) ===== */
+  .lock-screen{
+    position:fixed;inset:0;
+    background:#111;
+    display:flex;align-items:center;justify-content:center;
+    z-index:500;
+  }
+  .lock-box{
+    background:#fff;
+    border-radius:12px;
+    padding:36px 32px;
+    width:100%;
+    max-width:340px;
+    text-align:center;
+  }
+  .lock-box .mark{
+    width:52px;height:52px;
+    background:var(--orange);
+    border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    margin:0 auto 16px;
+  }
+  .lock-box h2{font-size:17px;margin-bottom:6px;}
+  .lock-box p{font-size:13px;color:var(--gray-text);margin-bottom:18px;}
+  .lock-box input{
+    width:100%;
+    padding:12px 14px;
+    border:1.5px solid var(--gray-border);
+    border-radius:8px;
+    font-size:14px;
+    margin-bottom:10px;
+    text-align:center;
+    letter-spacing:1px;
+  }
+  .lock-box input:focus{outline:none;border-color:var(--orange);}
+  .lock-box button{
+    width:100%;
+    background:var(--orange);
+    color:#fff;
+    font-weight:700;
+    padding:12px;
+    border-radius:8px;
+    font-size:14px;
+  }
+  .lock-box button:hover{background:var(--orange-dark);}
+  .lock-error{
+    color:var(--red);
+    font-size:12.5px;
+    margin-bottom:10px;
+    display:none;
+  }
+  .lock-error.show{display:block;}
+  .lock-forgot{
+    display:block;
+    margin-top:14px;
+    font-size:12.5px;
+    color:var(--gray-text);
+    text-decoration:underline;
+  }
+  .lock-forgot:hover{color:var(--orange);}
+
+  /* ===== LISTA DE PEDIDOS (estilo moderno y colorido, tipo tarjeta) ===== */
+  .orders-list{display:flex;flex-direction:column;gap:16px;max-width:640px;margin:0 auto;}
+  .order-card{
+    background:#fff;
+    border:none;
+    border-radius:20px;
+    padding:0;
+    overflow:hidden;
+    box-shadow:0 8px 24px rgba(80,60,140,.12);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .order-card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(80,60,140,.16);}
+
+  .o-sent-banner{
+    display:none;
+    color:#D32F2F;font-weight:900;font-size:15px;
+    text-align:center;
+    max-width:640px;margin:0 auto -6px;
+    padding:2px 0;
+  }
+  .o-sent-banner.show{display:block;}
+
+  /* --- Barra de título de la ficha (degradado) --- */
+  .order-card .o-titlebar{
+    background:linear-gradient(120deg, var(--orange) 0%, var(--pink) 55%, var(--purple) 100%);
+    color:#fff;
+    display:flex;align-items:center;justify-content:space-between;
+    gap:14px;flex-wrap:wrap;
+    padding:16px 20px;
+  }
+  .order-card .o-titlebar .o-tb-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .order-card .o-titlebar .o-tb-icon{font-size:18px;}
+  .order-card .o-titlebar .o-avatar{
+    width:36px;height:36px;border-radius:50%;
+    background:rgba(255,255,255,.25);
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:800;color:#fff;
+    box-shadow:inset 0 0 0 2px rgba(255,255,255,.4);
+    flex-shrink:0;
+  }
+  .order-card .o-titlebar .o-client-name{font-size:18px;font-weight:800;letter-spacing:.2px;color:#111;}
+  .order-card .o-titlebar .o-date{font-size:14px;font-weight:800;color:#111;}
+  .order-card .o-titlebar .o-tb-right{display:flex;align-items:center;gap:8px;}
+  .order-card .o-titlebar .o-code-box{
+    background:rgba(255,255,255,.85);color:#111;
+    border-radius:20px;
+    padding:6px 14px;
+    font-size:16px;font-weight:900;
+    text-align:center;line-height:1.25;
+    backdrop-filter:blur(4px);
+  }
+  .order-card .o-titlebar .o-code-box b{display:block;font-size:9px;color:rgba(0,0,0,.6);font-weight:700;letter-spacing:.4px;}
+  .order-card .o-titlebar .o-total-box{
+    background:#fff;color:var(--orange-dark);
+    border-radius:20px;
+    padding:6px 16px;
+    font-size:15px;font-weight:800;
+    box-shadow:0 3px 8px rgba(0,0,0,.12);
+  }
+
+  /* --- Cuerpo con secciones coloreadas (sin aspecto de formulario) --- */
+  .order-card .o-body{padding:14px 16px 4px;display:flex;flex-direction:column;gap:9px;}
+  .order-card .o-section{
+    background:#F9F8FF;
+    border:none;
+    border-left:4px solid var(--blue);
+    border-radius:12px;
+    padding:8px 12px 10px;
+  }
+  .order-card .o-body .o-section:nth-child(1){background:#A9C7FF;border-left-color:var(--blue);}
+  .order-card .o-body .o-section:nth-child(2){background:#FFF3EA;border-left-color:var(--orange);}
+  .order-card .o-body .o-section:nth-child(3){background:#8FE0BE;border-left-color:var(--green);}
+  .order-card .o-body .o-section:nth-child(4){background:#C9AEFF;border-left-color:var(--purple);}
+  .order-card .o-section-title{
+    display:flex;align-items:center;gap:6px;
+    font-size:15px;font-weight:900;color:#111;
+    text-transform:uppercase;letter-spacing:.5px;
+    padding-bottom:0;margin-bottom:6px;
+  }
+  .order-card .o-send-btn-title{
+    margin-left:auto;width:40px;height:40px;
+  }
+  .order-card .o-send-btn-title svg{width:19px;height:19px;}
+  .order-card .o-sec-icon{
+    width:20px;height:20px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:10.5px;flex-shrink:0;
+    background:rgba(0,0,0,.06);
+  }
+  .order-card .o-body .o-section:nth-child(1) .o-sec-icon{background:rgba(61,107,255,.15);}
+  .order-card .o-body .o-section:nth-child(2) .o-sec-icon{background:rgba(255,106,0,.15);}
+  .order-card .o-body .o-section:nth-child(3) .o-sec-icon{background:rgba(27,154,91,.15);}
+  .order-card .o-body .o-section:nth-child(4) .o-sec-icon{background:rgba(139,92,246,.15);}
+  .order-card .o-field-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:6px 12px;
+  }
+  .order-card .o-field label{
+    display:block;font-size:10px;font-weight:700;color:var(--gray-text);
+    margin-bottom:2px;
+  }
+  .order-card .o-field-value{
+    background:#fff;border:none;border-radius:8px;
+    padding:5px 9px;font-size:12px;color:var(--black);
+    min-height:14px;word-break:break-word;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
+  }
+  .order-card .o-items-box{
+    background:#fff;border:none;border-radius:8px;
+    padding:7px 10px;font-size:14px;font-weight:700;color:#111;white-space:pre-wrap;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
+  }
+  .order-card .o-line{font-size:12px;color:var(--black);margin-bottom:2px;}
+  .order-card .o-items{font-size:11.5px;color:var(--gray-text);white-space:pre-wrap;margin:6px 0;}
+  .order-card .o-wa-btn{
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    color:#0E7A46;text-align:center;
+  }
+  .order-card .o-wa-btn.sent{color:#8A8A8A;}
+  .order-card .o-del-btn{color:#B4231B;text-align:center;}
+  .orders-empty{text-align:center;color:var(--gray-text);padding:50px 10px;font-size:13px;}
+  .order-card .o-repartidor-row{
+    display:flex;align-items:center;gap:6px;margin:0 0 6px;
+  }
+  .order-card .o-repartidor-row:last-child{margin-bottom:0;}
+  .order-card .o-repartidor-row label{
+    font-size:14px;font-weight:800;color:#111;white-space:nowrap;
+    width:200px;flex-shrink:0;
+  }
+  .order-card .o-repartidor-input{
+    flex:1;padding:5px 9px;border:none;border-radius:8px;font-size:12px;outline:none;background:#fff;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
+  }
+  .order-card .o-repartidor-input:focus{box-shadow:0 0 0 2px var(--orange);}
+  .order-card .o-wa-repartidor-btn{color:#075E54;text-align:center;}
+  .order-card .o-phone-wrap{
+    flex:1;display:flex;align-items:center;
+    border:none;border-radius:10px;overflow:hidden;background:#fff;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
+  }
+  .order-card .o-phone-wrap:focus-within{box-shadow:0 0 0 2px var(--orange);}
+  .order-card .o-phone-prefix{
+    padding:5px 4px 5px 9px;font-size:12px;font-weight:700;color:var(--gray-text);
+    background:transparent;border-right:1px solid #EEE;white-space:nowrap;
+    border-top:none;border-left:none;border-bottom:none;
+    max-width:92px;cursor:pointer;outline:none;
+  }
+  .order-card .o-phone-input{
+    flex:1;min-width:0;padding:5px 9px 5px 6px;border:none;font-size:12px;outline:none;background:transparent;
+  }
+  .order-card .o-map-row{
+    display:flex;align-items:center;gap:6px;margin:0 0 6px;
+  }
+  .order-card .o-map-row label{
+    font-size:14px;font-weight:800;color:#111;white-space:nowrap;
+    width:200px;flex-shrink:0;
+  }
+  .order-card .o-map-link{color:#1a73e8;text-align:center;}
+  .order-card .o-recogida-btn{color:#5B3A29;text-align:center;}
+  .order-card .o-desc-row{
+    display:flex;flex-direction:column;gap:4px;margin:0;
+  }
+  .order-card .o-desc-row label{
+    font-size:14px;font-weight:800;color:#111;
+  }
+  .order-card .o-desc-textarea{
+    width:100%;padding:5px 9px;border:none;border-radius:8px;
+    font-size:12px;outline:none;resize:vertical;min-height:34px;background:#fff;margin-bottom:6px;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
+  }
+  .order-card .o-desc-textarea:focus{box-shadow:0 0 0 2px var(--purple);}
+  .order-card .o-proveedor-label{color:#111 !important;}
+  .order-card .o-phone-wrap-proveedor:focus-within{box-shadow:0 0 0 2px var(--purple);}
+  .order-card .o-recogida-label{color:#111 !important;}
+  .order-card .o-phone-wrap-recogida:focus-within{box-shadow:0 0 0 2px var(--green);}
+  .order-card .o-repartidor-input.o-recogida-input:focus{box-shadow:0 0 0 2px var(--green);}
+  .order-card .o-proveedor-msg-btn{color:var(--purple);text-align:center;}
+  .order-card .o-receipt-btn{color:var(--black);text-align:center;}
+
+  /* --- Barra de acciones: chips de colores en vez de barra de herramientas plana --- */
+  .order-card .o-actions{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:6px;
+    background:transparent;border-top:none;
+    padding:10px 14px 14px;
+  }
+  .order-card .o-actions a,
+  .order-card .o-actions button{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    background:#F3F1FA;border:none;border-radius:12px;
+    padding:12px 6px 9px;
+    font-size:10.5px;font-weight:700;
+    color:inherit;
+    transition:transform .12s ease, background .12s ease;
+  }
+  .order-card .o-actions a:hover,
+  .order-card .o-actions button:hover{background:#EAE6FA;transform:translateY(-2px);}
+  .order-card .o-actions .o-tool-icon{display:flex;}
+  .order-card .o-actions .o-tool-icon svg{width:34px;height:34px;}
+
+  /* ===== BOTÓN DE UBICACIÓN (buscador de dirección del proveedor) ===== */
+  .o-location-btn{
+    flex-shrink:0;
+    width:34px;height:34px;
+    display:flex;align-items:center;justify-content:center;
+    background:#fff;
+    border:none;
+    border-radius:10px;
+    font-size:15px;
+    box-shadow:0 1px 3px rgba(0,0,0,.08);
+  }
+  .o-location-btn:hover{background:#FFF3EA;}
+  .o-location-btn.has-location{color:var(--green);box-shadow:0 0 0 2px var(--green);}
+
+  /* ===== BOTÓN LATERAL DE ENVÍO (uno por fila: repartidor entrega, recogida y proveedor) ===== */
+  .o-send-btn{
+    flex-shrink:0;
+    width:46px;height:46px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--green);color:#fff;
+    border:none;
+    border-radius:12px;
+    box-shadow:0 1px 3px rgba(0,0,0,.08);
+  }
+  .o-send-btn svg{width:22px;height:22px;}
+  .o-send-btn:hover{background:#158049;transform:translateY(-1px);}
+  .o-send-btn.sent{background:#D32F2F;}
+  .o-send-btn.sent:hover{background:#B4231B;}
+
+  /* ===== MODAL BUSCADOR DE UBICACIÓN ===== */
+  .location-overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.6);
+    display:none;
+    align-items:center;justify-content:center;
+    z-index:950;
+    padding:20px;
+  }
+  .location-overlay.show{display:flex;}
+  .location-box{
+    background:#fff;
+    border-radius:12px;
+    width:100%;max-width:380px;
+    max-height:80vh;
+    display:flex;flex-direction:column;
+    overflow:hidden;
+  }
+  .location-box .loc-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 16px;border-bottom:1px solid var(--gray-border);
+  }
+  .location-box .loc-header h3{font-size:14px;font-weight:800;}
+  .location-close{
+    width:26px;height:26px;border-radius:50%;
+    background:#F3F3F3;color:var(--black);font-size:13px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .location-close:hover{background:#E5E5E5;}
+  .loc-search-wrap{
+    display:flex;align-items:center;gap:8px;
+    margin:14px 16px 0;
+    padding:8px 12px;
+    border:1.5px solid var(--gray-border);
+    border-radius:8px;
+  }
+  .loc-search-wrap:focus-within{border-color:var(--orange);}
+  .loc-search-wrap .loc-icon{font-size:14px;color:var(--gray-text);}
+  .loc-search-wrap input{
+    flex:1;border:none;outline:none;font-size:13.5px;background:transparent;
+  }
+  .loc-results{
+    margin:10px 16px 16px;
+    overflow-y:auto;
+    flex:1;
+  }
+  .loc-result-item{
+    padding:10px 8px;
+    border-bottom:1px solid #F0F0F0;
+    font-size:12.5px;
+    line-height:1.4;
+  }
+  .loc-result-item:hover{background:#FFF3EA;cursor:pointer;}
+  .loc-result-item:last-child{border-bottom:none;}
+  .loc-hint,.loc-empty,.loc-loading{
+    text-align:center;color:var(--gray-text);font-size:12.5px;padding:20px 10px;
+  }
+
+  /* ===== MODAL RECIBO ===== */
+  .receipt-overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.6);
+    display:none;
+    align-items:center;justify-content:flex-end;
+    z-index:900;
+    padding:20px;
+  }
+  .receipt-overlay.show{display:flex;}
+  .receipt-box{
+    background:transparent;
+    border-radius:12px;
+    width:min(94vw,440px);
+    max-height:96vh;
+    overflow-y:auto;
+    padding:0;
+    position:relative;
+  }
+  .receipt-close{
+    position:absolute;
+    top:8px;right:8px;
+    width:28px;height:28px;
+    border-radius:50%;
+    background:#fff;
+    color:var(--black);
+    font-size:14px;
+    display:flex;align-items:center;justify-content:center;
+    z-index:2;
+  }
+  .receipt-inner{background:#fff;padding:30px 24px;border-radius:12px;}
+  .receipt-inner.printing{
+    animation:receiptToPrinter .7s ease forwards;
+  }
+  @keyframes receiptToPrinter{
+    0%{transform:translateY(0) scale(1);opacity:1;}
+    100%{transform:translateY(70px) scale(.82);opacity:.25;}
+  }
+  .printer-icon-wrap{
+    display:flex;align-items:center;justify-content:center;
+    height:0;overflow:visible;
+    position:relative;
+  }
+  .printer-icon-wrap .printer-icon{
+    font-size:34px;
+    opacity:0;
+    transform:translateY(-20px) scale(.7);
+    transition:opacity .3s ease, transform .3s ease;
+  }
+  .printer-icon-wrap .printer-icon.active{
+    opacity:1;
+    transform:translateY(-30px) scale(1);
+  }
+  .receipt-inner .r-header{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:6px;text-align:center;}
+  .receipt-inner .r-mark{width:48px;height:48px;background:var(--orange);border-radius:10px;display:flex;align-items:center;justify-content:center;}
+  .receipt-inner .r-name{font-weight:800;font-size:23px;letter-spacing:.5px;}
+  .receipt-inner .r-sub{font-size:14px;color:var(--gray-text);text-align:center;margin-bottom:22px;}
+  .receipt-inner .r-divider{border-top:1px dashed #999;margin:20px 0;}
+  .receipt-inner .r-row{display:flex;justify-content:space-between;gap:10px;font-size:15px;margin-bottom:14px;}
+  .receipt-inner .r-label{color:var(--gray-text);white-space:nowrap;}
+  .receipt-inner .r-val{text-align:right;word-break:break-word;}
+  .receipt-inner table{width:100%;border-collapse:collapse;font-size:14.5px;margin:16px 0;}
+  .receipt-inner th{text-align:left;font-size:13px;color:var(--gray-text);padding-bottom:10px;border-bottom:1px dashed #999;}
+  .receipt-inner td{padding:12px 0;border-bottom:1px dashed #ddd;vertical-align:top;}
+  .receipt-inner .r-total{display:flex;justify-content:space-between;font-size:18px;font-weight:800;margin-top:20px;}
+  .receipt-inner .r-total .amount{color:var(--orange);}
+  .receipt-inner .r-footer{margin-top:26px;text-align:center;font-size:13px;color:#999;}
+  .receipt-print-btn{display:block;width:100%;margin-top:22px;background:#111;color:#fff;border:none;padding:15px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;}
+  @media print{
+    body *{visibility:hidden !important;}
+    .receipt-overlay, .receipt-overlay *{visibility:visible !important;}
+    .receipt-overlay{
+      position:absolute !important;top:0 !important;left:0 !important;
+      inset:auto !important;
+      width:100% !important;
+      background:none !important;padding:0 !important;
+      display:block !important;
+    }
+    .receipt-box{
+      position:static !important;
+      box-shadow:none !important;max-height:none !important;overflow:visible !important;
+      width:100% !important;background:#fff !important;
+      border-radius:0 !important;
+    }
+    .receipt-close,.receipt-print-btn{display:none !important;}
+    .printer-icon-wrap{display:none !important;}
+    .receipt-inner{padding:5px 6px !important;border-radius:0 !important;}
+    .receipt-inner .r-mark{width:28px !important;height:28px !important;}
+    .receipt-inner .r-name{font-size:13px !important;}
+    .receipt-inner .r-sub{font-size:9.5px !important;margin-bottom:8px !important;}
+    .receipt-inner .r-divider{margin:6px 0 !important;}
+    .receipt-inner .r-row{font-size:9.5px !important;margin-bottom:5px !important;}
+    .receipt-inner table{font-size:9.5px !important;margin:6px 0 !important;}
+    .receipt-inner th{font-size:8.5px !important;padding-bottom:3px !important;}
+    .receipt-inner td{padding:4px 0 !important;}
+    .receipt-inner .r-total{font-size:11px !important;margin-top:6px !important;}
+    .receipt-inner .r-footer{font-size:8.5px !important;margin-top:8px !important;}
+  }
+  @page{ size:58mm auto; margin:0; }
+</style>
+</head>
+<body>
+
+  <!-- ===== PANTALLA DE ACCESO ===== -->
+  <div class="lock-screen" id="lockScreen">
+    <div class="lock-box">
+      <div class="mark">
+        <svg viewBox="0 0 48 48" width="30" height="30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 15h14l-1.4 15.5a2 2 0 0 1-2 1.8H12.4a2 2 0 0 1-2-1.8L9 15z" fill="#fff" opacity=".85"/>
+          <path d="M13 15v-2.5a3 3 0 0 1 3-3h1a3 3 0 0 1 3 3V15" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>
+          <path d="M20 20h16l-1.6 17.5a2 2 0 0 1-2 1.8H23.6a2 2 0 0 1-2-1.8L20 20z" fill="#fff"/>
+          <path d="M24.5 20v-2.8a3.5 3.5 0 0 1 3.5-3.5h1a3.5 3.5 0 0 1 3.5 3.5V20" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2>Acceso a Pedidos</h2>
+      <p>Introduce la contraseña del panel de administración.</p>
+      <div class="lock-error" id="lockError">Contraseña incorrecta.</div>
+      <input type="password" id="lockPassword" placeholder="Contraseña" autocomplete="off">
+      <button type="button" id="lockSubmit">Entrar</button>
+      <a href="petra-tex-admin_2026.html" class="lock-forgot">¿Olvidaste tu contraseña? Recupérala desde el panel</a>
+    </div>
+  </div>
+
+  <div id="pedidosContent">
+
+  <header>
+    <div class="logo">
+      <div class="mark">
+        <svg viewBox="0 0 48 48" width="30" height="30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 15h14l-1.4 15.5a2 2 0 0 1-2 1.8H12.4a2 2 0 0 1-2-1.8L9 15z" fill="#fff" opacity=".85"/>
+          <path d="M13 15v-2.5a3 3 0 0 1 3-3h1a3 3 0 0 1 3 3V15" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>
+          <path d="M20 20h16l-1.6 17.5a2 2 0 0 1-2 1.8H23.6a2 2 0 0 1-2-1.8L20 20z" fill="#fff"/>
+          <path d="M24.5 20v-2.8a3.5 3.5 0 0 1 3.5-3.5h1a3.5 3.5 0 0 1 3.5 3.5V20" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="name">PETRA</div>
+    </div>
+    <div class="title">🧾 Pedidos recibidos</div>
+    <button type="button" class="logout-btn" id="logoutBtn">🔒 Cerrar sesión</button>
+  </header>
+
+  <div class="page-wrap">
+    <div class="orders-list" id="ordersList">Cargando pedidos…</div>
+  </div>
+
+  </div>
+
+  <!-- ===== MODAL RECIBO ===== -->
+  <div class="receipt-overlay" id="receiptOverlay">
+    <div class="receipt-box">
+      <button type="button" class="receipt-close" id="receiptCloseBtn">✕</button>
+      <div id="receiptContent"></div>
+      <div class="printer-icon-wrap"><span class="printer-icon" id="printerIcon">🖨️</span></div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL BUSCADOR DE UBICACIÓN DEL PROVEEDOR ===== -->
+  <div class="location-overlay" id="locationOverlay">
+    <div class="location-box">
+      <div class="loc-header">
+        <h3 id="locationTitle">📍 Buscar ubicación del proveedor</h3>
+        <button type="button" class="location-close" id="locationCloseBtn">✕</button>
+      </div>
+      <div class="loc-search-wrap">
+        <span class="loc-icon">🔍</span>
+        <input type="text" id="locationSearchInput" dir="auto" placeholder="Escribe el nombre del lugar o dirección…" autocomplete="off">
+      </div>
+      <div class="loc-results" id="locationResults">
+        <div class="loc-hint">Escribe al menos 3 letras para ver sugerencias.</div>
+      </div>
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://ortnsekmoxnxxyklxcsr.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_uGJm-mdrUHz3qVpjvVRZzg_cg0BgZfO';
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
+
+<script>
+  // ===== Control de acceso por contraseña (comparte contraseña con el panel de administración) =====
+  const ADMIN_PASSWORD_DEFAULT = 'hamioui390719';
+  const PASSWORD_KEY = 'petraTexAdminPassword';
+  function getAdminPassword(){
+    return localStorage.getItem(PASSWORD_KEY) || ADMIN_PASSWORD_DEFAULT;
+  }
+  const AUTH_KEY = 'petraTexAdminAuth';
+
+  const lockScreen = document.getElementById('lockScreen');
+  const pedidosContent = document.getElementById('pedidosContent');
+  const lockPassword = document.getElementById('lockPassword');
+  const lockError = document.getElementById('lockError');
+  const lockSubmit = document.getElementById('lockSubmit');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  function showPedidos(){
+    lockScreen.style.display = 'none';
+    pedidosContent.style.display = 'block';
+    loadOrdersList();
+  }
+  function showLock(){
+    lockScreen.style.display = 'flex';
+    pedidosContent.style.display = 'none';
+    lockPassword.value = '';
+    lockError.classList.remove('show');
+    lockPassword.focus();
+  }
+  function tryLogin(){
+    if(lockPassword.value === getAdminPassword()){
+      sessionStorage.setItem(AUTH_KEY, 'ok');
+      showPedidos();
+    } else {
+      lockError.classList.add('show');
+    }
+  }
+  lockSubmit.addEventListener('click', tryLogin);
+  lockPassword.addEventListener('keydown', (e) => { if(e.key === 'Enter') tryLogin(); });
+  logoutBtn.addEventListener('click', () => {
+    sessionStorage.removeItem(AUTH_KEY);
+    showLock();
+  });
+
+  // ===== Código de pedido único (letras + números, nunca se repite) =====
+  // Se genera a partir del ID único del pedido en la base de datos, así que nunca puede coincidir con otro.
+  function orderCode(id){
+    return 'PT-' + Number(id).toString(36).toUpperCase().padStart(4,'0');
+  }
+  window.orderCode = orderCode;
+
+  // ===== Código corto del producto (letras + números), ej: AN-2515 =====
+  // Misma fórmula que en el panel admin, para que coincida con el código mostrado en cada producto.
+  function productCode(id){
+    const n = Number(String(id).replace(/[^0-9]/g,'')) || 0;
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const l1 = letters[Math.floor(n/26)%26];
+    const l2 = letters[n%26];
+    const digits = String(n).slice(-4).padStart(4,'0');
+    return `${l1}${l2}-${digits}`;
+  }
+  window.productCode = productCode;
+
+  // ===== Pedidos y WhatsApp de agradecimiento =====
+  const STORE_CONTACT_PHONE = '+212 700 7000 60'; // 📌 número de WhatsApp de la tienda (solo referencia)
+  const ordersList = document.getElementById('ordersList');
+  const receiptOverlay = document.getElementById('receiptOverlay');
+  const receiptContent = document.getElementById('receiptContent');
+  const receiptCloseBtn = document.getElementById('receiptCloseBtn');
+
+  function waThankYouMessage(order){
+    const nombre = order.first_name ? order.first_name : '';
+    const itemsText = (order.items || []).map(i => `- [${productCode(i.id)}] ${i.name}${i.color ? ' / ' + i.color : ''}${i.size ? ' / ' + i.size : ''} x${i.qty}`).join('\n');
+    const ar = `${nombre ? `مرحباً ${nombre}!` : 'مرحباً!'} 🧡 شكراً لشرائك من PETRA.\n\n` +
+      `🔢 رقم الطلب: ${orderCode(order.id)}\n` +
+      `🧾 طلبك:\n${itemsText || '—'}\n\n` +
+      `لقد استلمنا طلبك بمبلغ ${order.total} درهم ونحن نجهزه الآن. سنخبرك بمجرد إرساله إلى عنوانك. لأي استفسار أو لمعرفة مكان طلبك، اتصل بنا على هذا الرقم: \u2066${STORE_CONTACT_PHONE}\u2069. شكراً لثقتك بنا!`;
+    const fr = `${nombre ? `Bonjour ${nombre} !` : 'Bonjour !'} 🧡 Merci pour votre achat chez PETRA.\n\n` +
+      `🔢 Commande n° ${orderCode(order.id)}\n` +
+      `🧾 Votre commande :\n${itemsText || '—'}\n\n` +
+      `Nous avons bien reçu votre commande de ${order.total} DH et nous la préparons. Nous vous prévenons dès qu'elle part vers votre adresse. Pour toute question ou pour savoir où en est votre commande, appelez-nous au : \u2066${STORE_CONTACT_PHONE}\u2069. Merci pour votre confiance !`;
+    return `${ar}\n\n———\n\n${fr}`;
+  }
+
+  function sendThankYouToClient(orderId){
+    const order = currentOrders.find(o => o.id === orderId);
+    if(!order) return;
+    const phoneDigits = (order.phone || '').replace(/[^0-9]/g,'');
+    if(!phoneDigits){
+      alert('Este pedido no tiene teléfono del cliente.');
+      return;
+    }
+    const waUrl = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(waThankYouMessage(order))}`;
+    window.open(waUrl, '_blank', 'noopener');
+    markOrderNotified(orderId);
+    const btn = document.getElementById(`sendBtn_cliente_${orderId}`);
+    if(btn) btn.classList.add('sent');
+    showSentBanner(orderId);
+  }
+  window.sendThankYouToClient = sendThankYouToClient;
+
+  // ===== Lista de códigos de país para los teléfonos de repartidor =====
+  const COUNTRY_CODES = [
+    { code:'212', label:'🇲🇦 +212' },
+    { code:'34',  label:'🇪🇸 +34'  },
+    { code:'33',  label:'🇫🇷 +33'  },
+    { code:'32',  label:'🇧🇪 +32'  },
+    { code:'31',  label:'🇳🇱 +31'  },
+    { code:'49',  label:'🇩🇪 +49'  },
+    { code:'39',  label:'🇮🇹 +39'  },
+    { code:'351', label:'🇵🇹 +351' },
+    { code:'44',  label:'🇬🇧 +44'  },
+    { code:'1',   label:'🇺🇸 +1'   },
+  ];
+  function countryOptionsHtml(selectedCode){
+    return COUNTRY_CODES.map(c =>
+      `<option value="${c.code}" ${c.code === selectedCode ? 'selected' : ''}>${c.label}</option>`
+    ).join('');
+  }
+
+  // ===== WhatsApp al repartidor (entrega al cliente) =====
+  let currentOrders = []; // últimos pedidos cargados, para poder armar el mensaje al repartidor
+
+  function repartidorKey(orderId){
+    return `petra_repartidor_phone_${orderId}`;
+  }
+  function getRepartidorPhone(orderId){
+    return localStorage.getItem(repartidorKey(orderId)) || '';
+  }
+  function saveRepartidorPhone(orderId, value){
+    const v = (value || '').trim();
+    const digits = v.replace(/[^0-9]/g,'');
+    localStorage.setItem(repartidorKey(orderId), digits.length >= 6 ? v : '');
+  }
+  window.saveRepartidorPhone = saveRepartidorPhone;
+
+  function repartidorCodeKey(orderId){
+    return `petra_repartidor_code_${orderId}`;
+  }
+  function getRepartidorCode(orderId){
+    return localStorage.getItem(repartidorCodeKey(orderId)) || '212';
+  }
+  function saveRepartidorCode(orderId, value){
+    localStorage.setItem(repartidorCodeKey(orderId), value || '212');
+  }
+  window.saveRepartidorCode = saveRepartidorCode;
+
+  // ===== Repartidor de RECOGIDA (proveedor -> almacén) =====
+  const WAREHOUSE_ADDRESS = 'Almacén Petra Tex, Tetuán'; // 📌 cambia esto por la dirección real de tu almacén
+
+  function recogidaKey(orderId){
+    return `petra_recogida_phone_${orderId}`;
+  }
+  function getRecogidaPhone(orderId){
+    return localStorage.getItem(recogidaKey(orderId)) || '';
+  }
+  function saveRecogidaPhone(orderId, value){
+    const v = (value || '').trim();
+    const digits = v.replace(/[^0-9]/g,'');
+    localStorage.setItem(recogidaKey(orderId), digits.length >= 6 ? v : '');
+  }
+  window.saveRecogidaPhone = saveRecogidaPhone;
+
+  function recogidaCodeKey(orderId){
+    return `petra_recogida_code_${orderId}`;
+  }
+  function getRecogidaCode(orderId){
+    return localStorage.getItem(recogidaCodeKey(orderId)) || '212';
+  }
+  function saveRecogidaCode(orderId, value){
+    localStorage.setItem(recogidaCodeKey(orderId), value || '212');
+  }
+  window.saveRecogidaCode = saveRecogidaCode;
+
+  // ===== Teléfono del proveedor y descripción del pedido a preparar =====
+  function proveedorTelKey(orderId){
+    return `petra_proveedor_tel_${orderId}`;
+  }
+  function getProveedorTel(orderId){
+    return localStorage.getItem(proveedorTelKey(orderId)) || '';
+  }
+  function saveProveedorTel(orderId, value){
+    const v = (value || '').trim();
+    const digits = v.replace(/[^0-9]/g,'');
+    localStorage.setItem(proveedorTelKey(orderId), digits.length >= 6 ? v : '');
+  }
+  window.saveProveedorTel = saveProveedorTel;
+
+  function proveedorTelCodeKey(orderId){
+    return `petra_proveedor_tel_code_${orderId}`;
+  }
+  function getProveedorTelCode(orderId){
+    return localStorage.getItem(proveedorTelCodeKey(orderId)) || '212';
+  }
+  function saveProveedorTelCode(orderId, value){
+    localStorage.setItem(proveedorTelCodeKey(orderId), value || '212');
+  }
+  window.saveProveedorTelCode = saveProveedorTelCode;
+
+  function proveedorDescKey(orderId){
+    return `petra_proveedor_desc_${orderId}`;
+  }
+  function getProveedorDesc(orderId){
+    return localStorage.getItem(proveedorDescKey(orderId)) || '';
+  }
+  function saveProveedorDesc(orderId, value){
+    localStorage.setItem(proveedorDescKey(orderId), (value || '').trim());
+  }
+  window.saveProveedorDesc = saveProveedorDesc;
+
+  function proveedorDirKey(orderId){
+    return `petra_proveedor_direccion_${orderId}`;
+  }
+  function getProveedorDireccion(orderId){
+    return localStorage.getItem(proveedorDirKey(orderId)) || '';
+  }
+  function saveProveedorDireccion(orderId, value){
+    localStorage.setItem(proveedorDirKey(orderId), (value || '').trim());
+  }
+  window.saveProveedorDireccion = saveProveedorDireccion;
+
+  // ===== Estado "enviado" de cada botón lateral (repartidor, recogida, proveedor) =====
+  function sentFlagKey(kind, orderId){
+    return `petra_sent_${kind}_${orderId}`;
+  }
+  function getSentFlag(kind, orderId){
+    return localStorage.getItem(sentFlagKey(kind, orderId)) === '1';
+  }
+  function showSentBanner(orderId){
+    const banner = document.getElementById(`sentBanner_${orderId}`);
+    if(banner) banner.classList.add('show');
+  }
+  function markSentFlag(kind, orderId){
+    localStorage.setItem(sentFlagKey(kind, orderId), '1');
+    const btn = document.getElementById(`sendBtn_${kind}_${orderId}`);
+    if(btn) btn.classList.add('sent');
+  }
+
+  function openProveedorMap(orderId){
+    const input = document.getElementById(`proveedor_dir_${orderId}`);
+    const address = input ? input.value.trim() : getProveedorDireccion(orderId);
+    if(!address){
+      alert('Escribe primero la dirección o el nombre del proveedor para verlo en el mapa.');
+      return;
+    }
+    saveProveedorDireccion(orderId, address);
+    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, '_blank', 'noopener');
+  }
+  window.openProveedorMap = openProveedorMap;
+
+  // ===== Buscador de ubicación del proveedor (con sugerencias, tipo autocompletado) =====
+  const LOCATION_TEXTS = {
+    es: { title:'📍 Buscar ubicación del proveedor', placeholder:'Escribe el nombre del lugar o dirección…', hint:'Escribe al menos 3 letras para ver sugerencias.', loading:'Buscando…', empty:'No se han encontrado lugares. Prueba con otro nombre.', error:'No se pudo buscar. Comprueba tu conexión e inténtalo de nuevo.' },
+    en: { title:'📍 Search supplier location', placeholder:'Type the place name or address…', hint:'Type at least 3 letters to see suggestions.', loading:'Searching…', empty:'No places found. Try another name.', error:'Search failed. Check your connection and try again.' },
+    fr: { title:'📍 Rechercher le lieu du fournisseur', placeholder:'Tapez le nom du lieu ou l\'adresse…', hint:'Tapez au moins 3 lettres pour voir des suggestions.', loading:'Recherche…', empty:'Aucun lieu trouvé. Essayez un autre nom.', error:'Échec de la recherche. Vérifiez votre connexion et réessayez.' },
+    ar: { title:'📍 البحث عن موقع المورد', placeholder:'اكتب اسم المكان أو العنوان…', hint:'اكتب 3 أحرف على الأقل لعرض الاقتراحات.', loading:'جارٍ البحث…', empty:'لم يتم العثور على أماكن. جرّب اسماً آخر.', error:'تعذّر البحث. تحقق من اتصالك وحاول مرة أخرى.' },
+  };
+  const locationOverlay = document.getElementById('locationOverlay');
+  const locationTitle = document.getElementById('locationTitle');
+  const locationSearchInput = document.getElementById('locationSearchInput');
+  const locationResults = document.getElementById('locationResults');
+  const locationCloseBtn = document.getElementById('locationCloseBtn');
+  let currentLocationOrderId = null;
+  let currentLocationLang = 'es';
+  let locationSearchTimer = null;
+  let locationSearchSeq = 0;
+
+  function openLocationSearch(orderId){
+    currentLocationOrderId = orderId;
+    const order = currentOrders.find(o => o.id === orderId);
+    const lang = (order && order.lang && LOCATION_TEXTS[order.lang]) ? order.lang : 'es';
+    currentLocationLang = lang;
+    const t = LOCATION_TEXTS[lang];
+    const isRtl = lang === 'ar';
+    locationOverlay.querySelector('.location-box').setAttribute('dir', isRtl ? 'rtl' : 'ltr');
+    locationTitle.textContent = t.title;
+    locationSearchInput.placeholder = t.placeholder;
+    locationSearchInput.value = '';
+    locationResults.innerHTML = `<div class="loc-hint">${t.hint}</div>`;
+    locationOverlay.classList.add('show');
+    setTimeout(() => locationSearchInput.focus(), 50);
+  }
+  window.openLocationSearch = openLocationSearch;
+
+  function closeLocationSearch(){
+    locationOverlay.classList.remove('show');
+    currentLocationOrderId = null;
+    if(locationSearchTimer) clearTimeout(locationSearchTimer);
+  }
+  if(locationCloseBtn) locationCloseBtn.addEventListener('click', closeLocationSearch);
+  if(locationOverlay) locationOverlay.addEventListener('click', (e) => { if(e.target === locationOverlay) closeLocationSearch(); });
+
+  async function runLocationSearch(query){
+    const seq = ++locationSearchSeq;
+    const t = LOCATION_TEXTS[currentLocationLang] || LOCATION_TEXTS.es;
+    locationResults.innerHTML = `<div class="loc-loading">${t.loading}</div>`;
+    try{
+      const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&accept-language=${currentLocationLang}&countrycodes=ma&q=${encodeURIComponent(query)}`;
+      const res = await fetch(url);
+      const results = await res.json();
+      if(seq !== locationSearchSeq) return; // respuesta antigua, ignorar
+      if(!results || !results.length){
+        locationResults.innerHTML = `<div class="loc-empty">${t.empty}</div>`;
+        return;
+      }
+      locationResults.innerHTML = results.map((r, i) => `
+        <div class="loc-result-item" data-index="${i}" dir="auto">📍 ${r.display_name}</div>
+      `).join('');
+      locationResults.querySelectorAll('.loc-result-item').forEach(el => {
+        el.addEventListener('click', () => {
+          const idx = parseInt(el.getAttribute('data-index'), 10);
+          selectLocationResult(results[idx]);
+        });
+      });
+    }catch(err){
+      if(seq !== locationSearchSeq) return;
+      locationResults.innerHTML = `<div class="loc-empty">${t.error}</div>`;
+    }
+  }
+
+  if(locationSearchInput){
+    locationSearchInput.addEventListener('input', () => {
+      const q = locationSearchInput.value.trim();
+      if(locationSearchTimer) clearTimeout(locationSearchTimer);
+      if(q.length < 3){
+        const t = LOCATION_TEXTS[currentLocationLang] || LOCATION_TEXTS.es;
+        locationResults.innerHTML = `<div class="loc-hint">${t.hint}</div>`;
+        return;
+      }
+      locationSearchTimer = setTimeout(() => runLocationSearch(q), 450);
+    });
+  }
+
+  function selectLocationResult(result){
+    const orderId = currentLocationOrderId;
+    if(!orderId) return;
+    const address = result.display_name;
+    const addrInput = document.getElementById(`proveedor_dir_${orderId}`);
+    if(addrInput) addrInput.value = address;
+    saveProveedorDireccion(orderId, address);
+    const btn = document.getElementById(`locationBtn_${orderId}`);
+    if(btn) btn.classList.add('has-location');
+    closeLocationSearch();
+    // Enviar automáticamente al repartidor de recogida por WhatsApp
+    sendOrderToRecogida(orderId);
+  }
+
+  function waRecogidaMessage(order, proveedorAddress){
+    const itemsText = (order.items || []).map(i => `- [${productCode(i.id)}] ${i.name}${i.color ? ' / ' + i.color : ''}${i.size ? ' / ' + i.size : ''} x${i.qty}`).join('\n');
+    const ar = `🏭 استلام طلبية من المورد\n\n` +
+      `🔢 رقم الطلب: ${orderCode(order.id)}\n` +
+      `📍 الاستلام من: ${proveedorAddress || '(أضف عنوان المورد)'}\n` +
+      `🏬 التوصيل إلى: ${WAREHOUSE_ADDRESS}\n\n` +
+      `🧾 الطلبية:\n${itemsText || '—'}`;
+    const fr = `🏭 Collecte de commande chez le fournisseur\n\n` +
+      `🔢 Commande n° ${orderCode(order.id)}\n` +
+      `📍 À récupérer chez : ${proveedorAddress || '(ajoutez l\'adresse du fournisseur)'}\n` +
+      `🏬 À livrer à : ${WAREHOUSE_ADDRESS}\n\n` +
+      `🧾 Commande :\n${itemsText || '—'}`;
+    return `${ar}\n\n———\n\n${fr}`;
+  }
+
+  function sendOrderToRecogida(orderId){
+    const input = document.getElementById(`recogida_${orderId}`);
+    const codeSelect = document.getElementById(`recogida_code_${orderId}`);
+    const code = codeSelect ? codeSelect.value : getRecogidaCode(orderId);
+    const phone = input ? input.value.trim() : getRecogidaPhone(orderId);
+    const phoneDigits = phone.replace(/[^0-9]/g,'');
+    if(!phone || phoneDigits.length < 6){
+      alert(`Escribe el número completo del repartidor de recogida (después del +${code}) en este pedido.`);
+      return;
+    }
+    saveRecogidaPhone(orderId, phone);
+    saveRecogidaCode(orderId, code);
+    const order = currentOrders.find(o => o.id === orderId);
+    if(!order) return;
+    const addrInput = document.getElementById(`proveedor_dir_${orderId}`);
+    const proveedorAddress = addrInput ? addrInput.value.trim() : getProveedorDireccion(orderId);
+    const waUrl = `https://wa.me/${code}${phoneDigits}?text=${encodeURIComponent(waRecogidaMessage(order, proveedorAddress))}`;
+    window.open(waUrl, '_blank', 'noopener');
+    markSentFlag('recogida', orderId);
+    showSentBanner(orderId);
+  }
+  window.sendOrderToRecogida = sendOrderToRecogida;
+
+  function waProveedorMessage(order, descripcion){
+    const itemsText = (order.items || []).map(i => `- [${productCode(i.id)}] ${i.name}${i.color ? ' / ' + i.color : ''}${i.size ? ' / ' + i.size : ''} x${i.qty}`).join('\n');
+    const ar = `👋 مرحباً، نحن من متجر *PETRA*.\n\n` +
+      `🔢 رقم الطلب: ${orderCode(order.id)}\n\n` +
+      `🧾 المنتجات المطلوبة:\n${itemsText || '—'}\n\n` +
+      `📝 ملاحظات إضافية:\n${descripcion || '(بدون وصف)'}\n\n` +
+      `🙏 برجاء تجهيزها في أقرب وقت ممكن. سيمر مندوب التوصيل لاستلامها قريباً.\n\n` +
+      `شكراً على مساعدتكم! 🧡`;
+    const fr = `👋 Bonjour, nous sommes de *PETRA*.\n\n` +
+      `🔢 Commande n° ${orderCode(order.id)}\n\n` +
+      `🧾 Produits commandés :\n${itemsText || '—'}\n\n` +
+      `📝 Remarques supplémentaires :\n${descripcion || '(sans description)'}\n\n` +
+      `🙏 Merci de la préparer dès que possible. Notre livreur passera bientôt la récupérer.\n\n` +
+      `Merci pour votre aide ! 🧡`;
+    return `${ar}\n\n———\n\n${fr}`;
+  }
+
+  function sendMessageToProveedor(orderId){
+    const input = document.getElementById(`proveedor_tel_${orderId}`);
+    const codeSelect = document.getElementById(`proveedor_tel_code_${orderId}`);
+    const code = codeSelect ? codeSelect.value : getProveedorTelCode(orderId);
+    const phone = input ? input.value.trim() : getProveedorTel(orderId);
+    const phoneDigits = phone.replace(/[^0-9]/g,'');
+    if(!phone || phoneDigits.length < 6){
+      alert(`Escribe el número completo del proveedor (después del +${code}) en este pedido.`);
+      return;
+    }
+    const descInput = document.getElementById(`proveedor_desc_${orderId}`);
+    const descripcion = descInput ? descInput.value.trim() : getProveedorDesc(orderId);
+    if(!descripcion){
+      alert('Escribe primero la descripción del pedido que debe preparar el proveedor.');
+      return;
+    }
+    saveProveedorTel(orderId, phone);
+    saveProveedorTelCode(orderId, code);
+    saveProveedorDesc(orderId, descripcion);
+    const order = currentOrders.find(o => o.id === orderId);
+    if(!order) return;
+    const waUrl = `https://wa.me/${code}${phoneDigits}?text=${encodeURIComponent(waProveedorMessage(order, descripcion))}`;
+    window.open(waUrl, '_blank', 'noopener');
+    markSentFlag('proveedor', orderId);
+    showSentBanner(orderId);
+  }
+  window.sendMessageToProveedor = sendMessageToProveedor;
+
+  function waRepartidorMessage(order){
+    const itemsText = (order.items || []).map(i => `- [${productCode(i.id)}] ${i.name}${i.color ? ' / ' + i.color : ''}${i.size ? ' / ' + i.size : ''} x${i.qty}`).join('\n');
+    const clientName = [order.first_name, order.last_name].filter(Boolean).join(' ') || '—';
+    const ar = `📦 طلبية جديدة للتوصيل\n` +
+      `🔢 رقم الطلب: ${orderCode(order.id)}\n` +
+      `👤 ${clientName}\n` +
+      `📞 ${order.phone || '—'}\n` +
+      `📍 ${order.address || '—'}\n\n` +
+      `🧾 الطلبية:\n${itemsText || '—'}\n\n` +
+      `💰 المبلغ الواجب تحصيله: ${order.total} درهم`;
+    const fr = `📦 Nouvelle commande à livrer\n` +
+      `🔢 Commande n° ${orderCode(order.id)}\n` +
+      `👤 ${clientName}\n` +
+      `📞 ${order.phone || '—'}\n` +
+      `📍 ${order.address || '—'}\n\n` +
+      `🧾 Commande :\n${itemsText || '—'}\n\n` +
+      `💰 Montant à encaisser : ${order.total} DH`;
+    return `${ar}\n\n———\n\n${fr}`;
+  }
+
+  function sendOrderToRepartidor(orderId){
+    const input = document.getElementById(`repartidor_${orderId}`);
+    const codeSelect = document.getElementById(`repartidor_code_${orderId}`);
+    const code = codeSelect ? codeSelect.value : getRepartidorCode(orderId);
+    const phone = input ? input.value.trim() : getRepartidorPhone(orderId);
+    const phoneDigits = phone.replace(/[^0-9]/g,'');
+    if(!phone || phoneDigits.length < 6){
+      alert(`Escribe el número completo del repartidor (después del +${code}) en este pedido.`);
+      return;
+    }
+    saveRepartidorPhone(orderId, phone);
+    saveRepartidorCode(orderId, code);
+    const order = currentOrders.find(o => o.id === orderId);
+    if(!order) return;
+    const waUrl = `https://wa.me/${code}${phoneDigits}?text=${encodeURIComponent(waRepartidorMessage(order))}`;
+    window.open(waUrl, '_blank', 'noopener');
+    markSentFlag('repartidor', orderId);
+    showSentBanner(orderId);
+  }
+  window.sendOrderToRepartidor = sendOrderToRepartidor;
+
+  // ===== Recibo del pedido =====
+  function buildReceiptHtml(order){
+    const fecha = new Date(order.created_at).toLocaleString('es-ES', {dateStyle:'long', timeStyle:'short'});
+    const clientName = [order.first_name, order.last_name].filter(Boolean).join(' ') || '—';
+    const itemsRows = (order.items || []).map(i => `
+      <tr>
+        <td>${i.name}${i.color ? ' / ' + i.color : ''}${i.size ? ' / ' + i.size : ''}</td>
+        <td style="text-align:center;">${i.qty}</td>
+      </tr>`).join('');
+    return `
+  <div class="receipt-inner">
+    <div class="r-header">
+      <div class="r-mark">
+        <svg viewBox="0 0 48 48" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 15h14l-1.4 15.5a2 2 0 0 1-2 1.8H12.4a2 2 0 0 1-2-1.8L9 15z" fill="#fff" opacity=".85"/>
+          <path d="M13 15v-2.5a3 3 0 0 1 3-3h1a3 3 0 0 1 3 3V15" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>
+          <path d="M20 20h16l-1.6 17.5a2 2 0 0 1-2 1.8H23.6a2 2 0 0 1-2-1.8L20 20z" fill="#fff"/>
+          <path d="M24.5 20v-2.8a3.5 3.5 0 0 1 3.5-3.5h1a3.5 3.5 0 0 1 3.5 3.5V20" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="r-name">PETRA</div>
+    </div>
+    <div class="r-sub">Recibo de pedido</div>
+    <div class="r-row"><span class="r-label">Nº de pedido</span><span class="r-val">${orderCode(order.id)}</span></div>
+    <div class="r-row"><span class="r-label">Fecha y hora</span><span class="r-val">${fecha}</span></div>
+    <div class="r-divider"></div>
+    <div class="r-row"><span class="r-label">Cliente</span><span class="r-val">${clientName}</span></div>
+    <div class="r-row"><span class="r-label">Teléfono</span><span class="r-val">${order.phone || '—'}</span></div>
+    <div class="r-row"><span class="r-label">Dirección</span><span class="r-val">${order.address || '—'}</span></div>
+    <div class="r-divider"></div>
+    <table>
+      <thead><tr><th>Artículo</th><th style="text-align:center;">Cant.</th></tr></thead>
+      <tbody>${itemsRows}</tbody>
+    </table>
+    <div class="r-divider"></div>
+    <div class="r-total"><span>Total a pagar</span><span class="amount">${order.total} DH</span></div>
+    <div class="r-footer">¡Gracias por tu compra!</div>
+    <button type="button" class="receipt-print-btn" onclick="printReceiptWithAnimation()">🖨️ Imprimir recibo</button>
+  </div>`;
+  }
+
+  function printReceiptWithAnimation(){
+    const inner = document.querySelector('#receiptContent .receipt-inner');
+    const printerIcon = document.getElementById('printerIcon');
+    if(inner) inner.classList.add('printing');
+    if(printerIcon) printerIcon.classList.add('active');
+    setTimeout(() => {
+      if(inner) inner.classList.remove('printing');
+      if(printerIcon) printerIcon.classList.remove('active');
+      setTimeout(() => window.print(), 50);
+    }, 650);
+  }
+  window.printReceiptWithAnimation = printReceiptWithAnimation;
+
+  function openReceipt(orderId){
+    const order = currentOrders.find(o => o.id === orderId);
+    if(!order) return;
+    receiptContent.innerHTML = buildReceiptHtml(order);
+    receiptOverlay.classList.add('show');
+  }
+  window.openReceipt = openReceipt;
+
+  function closeReceiptModal(){
+    receiptOverlay.classList.remove('show');
+    receiptContent.innerHTML = '';
+  }
+  if(receiptCloseBtn) receiptCloseBtn.addEventListener('click', closeReceiptModal);
+  if(receiptOverlay) receiptOverlay.addEventListener('click', (e) => { if(e.target === receiptOverlay) closeReceiptModal(); });
+
+  async function loadOrdersList(){
+    ordersList.innerHTML = 'Cargando pedidos…';
+    const { data, error } = await supabaseClient.from('orders').select('*').order('created_at', { ascending: false }).limit(50);
+    if(error){
+      ordersList.innerHTML = `<div class="orders-empty">No se pudieron cargar los pedidos.<br>${error.message || ''}</div>`;
+      return;
+    }
+    if(!data || !data.length){
+      ordersList.innerHTML = `<div class="orders-empty">Todavía no ha llegado ningún pedido.</div>`;
+      return;
+    }
+    currentOrders = data;
+    ordersList.innerHTML = data.map(o => {
+      const fecha = new Date(o.created_at).toLocaleString('es-ES', {dateStyle:'medium', timeStyle:'short'});
+      const itemsText = (o.items || []).map(i => `${i.name}${i.color ? ' / ' + i.color : ''}${i.size ? ' / ' + i.size : ''} x${i.qty}`).join('\n');
+      const clientName = [o.first_name, o.last_name].filter(Boolean).join(' ') || '—';
+      const initials = clientName === '—' ? '?' : clientName.trim().split(/\s+/).slice(0,2).map(w => w[0]).join('').toUpperCase();
+      return `
+        <div class="o-sent-banner ${(o.notified || getSentFlag('repartidor', o.id) || getSentFlag('recogida', o.id) || getSentFlag('proveedor', o.id)) ? 'show' : ''}" id="sentBanner_${o.id}">✔ Ya enviado</div>
+        <div class="order-card">
+
+          <div class="o-titlebar">
+            <div class="o-tb-left">
+              <span class="o-avatar">${initials}</span>
+              <span class="o-client-name">${clientName}</span>
+              <span class="o-date">${fecha}</span>
+            </div>
+            <div class="o-tb-right">
+              <div class="o-code-box"><b>Nº PEDIDO</b>${orderCode(o.id)}</div>
+              <div class="o-total-box">${o.total} DH</div>
+            </div>
+          </div>
+
+          <div class="o-body">
+
+            <div class="o-section">
+              <div class="o-section-title">
+                <span class="o-sec-icon">👤</span>Datos del cliente
+                <button type="button" class="o-send-btn o-send-btn-title ${o.notified ? 'sent' : ''}" id="sendBtn_cliente_${o.id}" onclick="sendThankYouToClient(${o.id})" title="Enviar pedido y agradecimiento al cliente">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 3L11 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 3L14.5 21l-3.5-8L3 9.5 21 3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                </button>
+              </div>
+              <div class="o-field-grid">
+                <div class="o-field"><label>📧 Email</label><div class="o-field-value">${o.email || '—'}</div></div>
+                <div class="o-field"><label>📞 Teléfono</label><div class="o-field-value">${o.phone || '—'}</div></div>
+                <div class="o-field" style="grid-column:1/-1;"><label>📍 Dirección</label><div class="o-field-value">${o.address || '—'}</div></div>
+              </div>
+            </div>
+
+            <div class="o-section">
+              <div class="o-section-title"><span class="o-sec-icon">🛍️</span>Artículos del pedido</div>
+              <div class="o-items-box">${itemsText}</div>
+            </div>
+
+            <div class="o-section">
+              <div class="o-section-title"><span class="o-sec-icon">🚚</span>Reparto</div>
+              <div class="o-repartidor-row">
+                <label for="repartidor_${o.id}">📦 Entrega al cliente:</label>
+                <div class="o-phone-wrap">
+                  <select class="o-phone-prefix" id="repartidor_code_${o.id}" onchange="saveRepartidorCode(${o.id}, this.value)">
+                    ${countryOptionsHtml(getRepartidorCode(o.id))}
+                  </select>
+                  <input type="tel" class="o-phone-input" id="repartidor_${o.id}" placeholder="600 000 000" value="${getRepartidorPhone(o.id)}" oninput="saveRepartidorPhone(${o.id}, this.value)">
+                </div>
+                <button type="button" class="o-send-btn ${getSentFlag('repartidor', o.id) ? 'sent' : ''}" id="sendBtn_repartidor_${o.id}" onclick="sendOrderToRepartidor(${o.id})" title="Enviar mensaje al repartidor de entrega">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 3L11 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 3L14.5 21l-3.5-8L3 9.5 21 3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                </button>
+              </div>
+              <div class="o-repartidor-row">
+                <label class="o-recogida-label" for="recogida_${o.id}">🏭 Recogida en proveedor:</label>
+                <div class="o-phone-wrap o-phone-wrap-recogida">
+                  <select class="o-phone-prefix" id="recogida_code_${o.id}" onchange="saveRecogidaCode(${o.id}, this.value)">
+                    ${countryOptionsHtml(getRecogidaCode(o.id))}
+                  </select>
+                  <input type="tel" class="o-phone-input" id="recogida_${o.id}" placeholder="600 000 000" value="${getRecogidaPhone(o.id)}" oninput="saveRecogidaPhone(${o.id}, this.value)">
+                </div>
+                <button type="button" class="o-location-btn ${getProveedorDireccion(o.id) ? 'has-location' : ''}" id="locationBtn_${o.id}" onclick="openLocationSearch(${o.id})" title="Buscar ubicación del proveedor y enviarla al repartidor">📍</button>
+                <button type="button" class="o-send-btn ${getSentFlag('recogida', o.id) ? 'sent' : ''}" id="sendBtn_recogida_${o.id}" onclick="sendOrderToRecogida(${o.id})" title="Enviar mensaje al repartidor de recogida">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 3L11 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 3L14.5 21l-3.5-8L3 9.5 21 3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="o-section">
+              <div class="o-section-title"><span class="o-sec-icon">🏭</span>Proveedor</div>
+              <div class="o-map-row">
+                <label class="o-recogida-label" for="proveedor_dir_${o.id}">📍 Datos proveedor:</label>
+                <input type="text" class="o-repartidor-input o-recogida-input" id="proveedor_dir_${o.id}" dir="auto" placeholder="Dirección, nombre y teléfono del proveedor" value="${getProveedorDireccion(o.id)}" oninput="saveProveedorDireccion(${o.id}, this.value)">
+              </div>
+              <div class="o-repartidor-row">
+                <label class="o-proveedor-label" for="proveedor_tel_${o.id}">📞 Teléfono del proveedor:</label>
+                <div class="o-phone-wrap o-phone-wrap-proveedor">
+                  <select class="o-phone-prefix" id="proveedor_tel_code_${o.id}" onchange="saveProveedorTelCode(${o.id}, this.value)">
+                    ${countryOptionsHtml(getProveedorTelCode(o.id))}
+                  </select>
+                  <input type="tel" class="o-phone-input" id="proveedor_tel_${o.id}" placeholder="600 000 000" value="${getProveedorTel(o.id)}" oninput="saveProveedorTel(${o.id}, this.value)">
+                </div>
+                <button type="button" class="o-send-btn ${getSentFlag('proveedor', o.id) ? 'sent' : ''}" id="sendBtn_proveedor_${o.id}" onclick="sendMessageToProveedor(${o.id})" title="Enviar mensaje al proveedor">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 3L11 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 3L14.5 21l-3.5-8L3 9.5 21 3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                </button>
+              </div>
+              <div class="o-desc-row">
+                <label class="o-proveedor-label" for="proveedor_desc_${o.id}">📝 Descripción del pedido para el proveedor:</label>
+                <textarea class="o-desc-textarea" id="proveedor_desc_${o.id}" dir="auto" placeholder="Escribe aquí lo que el proveedor tiene que preparar…" oninput="saveProveedorDesc(${o.id}, this.value)">${getProveedorDesc(o.id)}</textarea>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="o-actions">
+            <button type="button" class="o-map-link" onclick="openProveedorMap(${o.id})"><span class="o-tool-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 21s7-6.3 7-11.5A7 7 0 105 9.5C5 14.7 12 21 12 21z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="9.5" r="2.4" stroke="currentColor" stroke-width="1.8"/></svg></span>Ver en mapa</button>
+            <button type="button" class="o-receipt-btn" onclick="openReceipt(${o.id})"><span class="o-tool-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 3h12v18l-2.5-1.5L13 21l-1-1.5L11 21l-2.5-1.5L6 21V3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 8h6M9 12h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>Recibo</button>
+            <button type="button" class="o-del-btn" onclick="deleteOrder(${o.id})"><span class="o-tool-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 7h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M9 7V4h6v3" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M6 7l1 13h10l1-13" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>Borrar</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  async function markOrderNotified(orderId){
+    await supabaseClient.from('orders').update({ notified: true }).eq('id', orderId);
+  }
+  window.markOrderNotified = markOrderNotified;
+
+  async function deleteOrder(orderId){
+    const ok = window.confirm('¿Seguro que quieres borrar este pedido? Esta acción no se puede deshacer.');
+    if(!ok) return;
+    const { error, data } = await supabaseClient.from('orders').delete().eq('id', orderId).select();
+    if(error){
+      console.error('Error al borrar el pedido:', error);
+      alert('No se pudo borrar el pedido.\n\nMotivo: ' + (error.message || 'desconocido') + '\n\nEsto suele pasar si en Supabase falta el permiso de "eliminar" (DELETE) en la tabla orders.');
+      return;
+    }
+    if(!data || !data.length){
+      alert('El pedido no se ha borrado. Puede que en Supabase falte el permiso de "eliminar" (DELETE) para la tabla orders (RLS).');
+      return;
+    }
+    loadOrdersList();
+  }
+  window.deleteOrder = deleteOrder;
+
+  if(sessionStorage.getItem(AUTH_KEY) === 'ok'){
+    showPedidos();
+  } else {
+    showLock();
+  }
+</script>
+
+<script>
+  // ===== Aviso automático: sonido + refresco cuando llega un pedido nuevo (en tiempo real) =====
+  function beepNewOrder(){
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [0, 220].forEach(delay => {
+        setTimeout(() => {
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.type = 'sine';
+          o.frequency.value = 880;
+          g.gain.value = 0.2;
+          o.connect(g); g.connect(ctx.destination);
+          o.start();
+          o.stop(ctx.currentTime + 0.18);
+        }, delay);
+      });
+      setTimeout(() => ctx.close(), 500);
+    }catch(e){ /* el navegador bloqueó el sonido, no pasa nada */ }
+  }
+
+  supabaseClient
+    .channel('orders-nuevo-pedido')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, () => {
+      beepNewOrder();
+      if(typeof loadOrdersList === 'function' && sessionStorage.getItem(AUTH_KEY) === 'ok') loadOrdersList();
+    })
+    .subscribe();
+</script>
+
+</body>
+</html>
