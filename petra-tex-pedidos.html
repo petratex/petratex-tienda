@@ -1,0 +1,2857 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PETRA - Pedidos recibidos</title>
+<style>
+  :root{
+    --orange:#FF6A00;
+    --orange-dark:#E85A00;
+    --black:#111111;
+    --gray-text:#767676;
+    --gray-border:#E5E5E5;
+    --bg:#F6F5FB;
+    --green:#1B9A5B;
+    --red:#D6362B;
+    --blue:#3D6BFF;
+    --purple:#8B5CF6;
+    --pink:#FF4D8D;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:"Helvetica Neue",Arial,sans-serif;}
+  body{
+    background-color:#C9915C;
+    background-image:
+      repeating-linear-gradient(90deg, rgba(0,0,0,.06) 0px, rgba(0,0,0,.06) 1px, transparent 2px, transparent 6px),
+      linear-gradient(180deg, #D6A171 0%, #B27E4C 100%);
+    color:var(--black);min-height:100vh;
+  }
+  a{text-decoration:none;color:inherit;}
+  button{cursor:pointer;border:none;font-family:inherit;}
+  input,select,textarea{font-family:inherit;}
+
+  /* HEADER */
+  header{
+    background:#111;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 28px;
+    flex-wrap:wrap;
+    row-gap:10px;
+    position:sticky;
+    top:0;
+    z-index:400;
+    min-height:70px;
+  }
+  header .logo{
+    position:static;
+    display:flex;align-items:center;gap:14px;
+    margin-right:auto;
+  }
+  header .logo .mark{
+    width:52px;height:52px;background:var(--orange);border-radius:12px;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;
+  }
+  header .logo .name{font-weight:900;font-size:34px;letter-spacing:1px;color:var(--orange);}
+  header .title{font-size:14px;color:#bdbdbd;}
+  header .back{
+    background:transparent;
+    color:#fff;
+    border:1px solid #444;
+    padding:8px 16px;
+    border-radius:20px;
+    font-size:13px;
+    font-weight:600;
+  }
+  header .back:hover{border-color:var(--orange);color:var(--orange);}
+  .logout-btn{
+    background:transparent;
+    border:1px solid #444;
+    color:#fff;
+    font-size:12.5px;
+    font-weight:700;
+    padding:8px 14px;
+    border-radius:8px;
+    margin-left:10px;
+  }
+  .logout-btn:hover{border-color:var(--red);color:var(--red);}
+  .logout-btn.icon-btn{padding:8px 11px;font-size:15px;}
+  .logout-btn.icon-btn:hover{border-color:var(--orange);color:var(--orange);}
+
+  /* ===== MODAL CAMBIAR CONTRASEÑA ===== */
+  .change-pass-overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.55);
+    display:none;
+    align-items:center;justify-content:center;
+    z-index:700;
+  }
+  .change-pass-overlay.show{display:flex;}
+  .change-pass-box{
+    background:#fff;
+    border-radius:12px;
+    padding:32px 28px;
+    width:100%;
+    max-width:340px;
+    text-align:center;
+  }
+  .change-pass-box h2{font-size:17px;margin-bottom:6px;color:var(--black,#111);}
+  .change-pass-box p{font-size:13px;color:var(--gray-text,#767676);margin-bottom:18px;}
+  .change-pass-box input{
+    width:100%;
+    padding:12px 14px;
+    border:1.5px solid var(--gray-border);
+    border-radius:8px;
+    font-size:14px;
+    margin-bottom:10px;
+    text-align:center;
+  }
+  .change-pass-box input:focus{outline:none;border-color:var(--orange);}
+  .change-pass-error{
+    color:var(--red);
+    font-size:12.5px;
+    margin-bottom:10px;
+    display:none;
+  }
+  .change-pass-error.show{display:block;}
+  .change-pass-success{
+    color:var(--green);
+    font-size:12.5px;
+    margin-bottom:10px;
+    display:none;
+  }
+  .change-pass-success.show{display:block;}
+  .change-pass-box .cp-save-btn{
+    width:100%;
+    background:var(--orange);
+    color:#fff;
+    font-weight:700;
+    padding:12px;
+    border-radius:8px;
+    font-size:14px;
+    margin-bottom:8px;
+  }
+  .change-pass-box .cp-save-btn:hover{background:var(--orange-dark);}
+  .change-pass-box .cp-cancel-btn{
+    width:100%;
+    background:none;
+    color:var(--gray-text,#767676);
+    font-weight:600;
+    padding:10px;
+    font-size:13px;
+    text-decoration:underline;
+  }
+
+  /* ===== BARRA DE SELECCIÓN MÚLTIPLE ===== */
+  .bulk-select-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+    max-width:640px;
+    margin:12px 0 16px;
+    padding:10px 14px;
+    background:#fff;
+    border-radius:12px;
+    box-shadow:0 4px 14px rgba(80,60,140,.10);
+  }
+  .select-all-label{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:13px;
+    font-weight:700;
+    color:var(--black);
+    cursor:pointer;
+    user-select:none;
+  }
+  .select-all-label input[type="checkbox"]{
+    width:19px;height:19px;
+    accent-color:var(--orange);
+    cursor:pointer;
+  }
+  .bulk-delete-trigger-btn{
+    background:var(--red);
+    color:#fff;
+    font-weight:800;
+    font-size:12.5px;
+    padding:9px 16px;
+    border-radius:10px;
+  }
+  .bulk-delete-trigger-btn:hover{background:#b52a21;}
+
+  /* ===== MODAL BORRAR PEDIDOS SELECCIONADOS ===== */
+  .bulk-delete-overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.55);
+    display:none;
+    align-items:center;justify-content:center;
+    z-index:700;
+    padding:16px;
+  }
+  .bulk-delete-overlay.show{display:flex;}
+  .bulk-delete-box{
+    background:#fff;
+    border-radius:12px;
+    padding:32px 28px;
+    width:100%;
+    max-width:360px;
+    text-align:center;
+  }
+  .bulk-delete-box h2{font-size:17px;margin-bottom:6px;color:var(--red);}
+  .bulk-delete-box p{font-size:13px;color:var(--gray-text,#767676);margin-bottom:18px;line-height:1.4;}
+  .bulk-delete-box input{
+    width:100%;
+    padding:12px 14px;
+    border:1.5px solid var(--gray-border);
+    border-radius:8px;
+    font-size:14px;
+    margin-bottom:10px;
+    text-align:center;
+  }
+  .bulk-delete-box input:focus{outline:none;border-color:var(--red);}
+  .bulk-delete-error{
+    color:var(--red);
+    font-size:12.5px;
+    margin-bottom:10px;
+    display:none;
+  }
+  .bulk-delete-error.show{display:block;}
+  .bulk-delete-box .bd-confirm-btn{
+    width:100%;
+    background:var(--red);
+    color:#fff;
+    font-weight:700;
+    padding:12px;
+    border-radius:8px;
+    font-size:14px;
+    margin-bottom:8px;
+  }
+  .bulk-delete-box .bd-confirm-btn:hover{background:#b52a21;}
+  .bulk-delete-box .bd-cancel-btn{
+    width:100%;
+    background:none;
+    color:var(--gray-text,#767676);
+    font-weight:600;
+    padding:10px;
+    font-size:13px;
+    text-decoration:underline;
+  }
+  .lang-switch{display:flex;gap:4px;background:#1c1c1c;padding:4px;border-radius:20px;z-index:2;}
+  .lang-switch button{
+    background:transparent;color:#bdbdbd;border:none;padding:6px 10px;border-radius:16px;
+    font-size:12px;font-weight:700;letter-spacing:.3px;
+  }
+  .lang-switch button:hover{color:#fff;}
+  .lang-switch button.active{background:var(--orange);color:#fff;}
+
+  .page-wrap{max-width:1320px;margin:0 auto;padding:24px 20px 60px;}
+  #pedidosContent{display:none;}
+
+  /* ===== LAYOUT DE DOS COLUMNAS (pedidos + panel de mapa) ===== */
+  .layout-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start;}
+  .map-panel{position:sticky;top:94px;}
+  .map-panel-inner{background:#fff;border-radius:16px;box-shadow:0 6px 20px rgba(80,60,140,.14);padding:14px;}
+  .map-panel-inner h3{font-size:14px;font-weight:800;margin-bottom:3px;}
+  .map-panel-hint{font-size:10.5px;color:var(--gray-text);margin-bottom:8px;line-height:1.35;}
+
+  /* ===== Tabla de pedidos (panel derecho) — estilo moderno de tarjetas ===== */
+  .ot-wrap{
+    max-height:82vh;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    padding-right:4px;
+    scrollbar-width:thin;
+    scrollbar-color:var(--gray-border) transparent;
+  }
+  .ot-wrap::-webkit-scrollbar{width:8px;}
+  .ot-wrap::-webkit-scrollbar-thumb{background:var(--gray-border);border-radius:8px;}
+  .ot-wrap::-webkit-scrollbar-thumb:hover{background:#c9c9c9;}
+  .ot-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 3px 6px;
+    font-size:8.5px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    color:var(--gray-text);
+    position:sticky;top:0;
+    background:#fff;
+    z-index:2;
+  }
+  .ot-body{display:flex;flex-direction:column;gap:5px;}
+  .ot-row{
+    background:var(--bg);
+    border-radius:9px;
+    padding:6px 8px;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
+  }
+  .ot-row:hover{
+    transform:translateY(-2px);
+    box-shadow:0 8px 20px rgba(80,60,140,.16);
+    background:#fff;
+  }
+  .ot-row-top{
+    display:flex;align-items:center;gap:5px;flex-wrap:wrap;
+    margin-bottom:4px;
+  }
+  .ot-code{
+    font-weight:900;
+    font-size:8.5px;
+    color:#fff;
+    background:linear-gradient(120deg, var(--orange) 0%, var(--pink) 100%);
+    padding:2px 5px;
+    border-radius:6px;
+    white-space:nowrap;
+  }
+  .ot-total{font-weight:800;font-size:9.5px;white-space:nowrap;}
+  .ot-date{color:var(--gray-text);font-size:8.5px;white-space:nowrap;}
+  .ot-status{
+    display:inline-flex;align-items:center;justify-content:center;gap:2px;
+    font-size:8.5px;font-weight:800;
+    padding:2px 6px;
+    border-radius:999px;
+    white-space:nowrap;
+    margin-left:auto;
+  }
+  .ot-status.sent{background:#E4F7EC;color:var(--green);}
+  .ot-status.pending{background:#FDECEC;color:var(--red);}
+
+  .ot-people{display:flex;flex-direction:column;gap:2px;}
+  .ot-person{display:flex;align-items:center;gap:5px;min-width:0;}
+  .ot-person-icon{
+    flex:none;
+    width:15px;height:15px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:8px;
+    color:#fff;
+  }
+  .ot-person.is-cliente .ot-person-icon{background:linear-gradient(135deg, var(--purple), var(--blue));}
+  .ot-person.is-proveedor .ot-person-icon{background:linear-gradient(135deg, #8B5CF6, #A855F7);}
+  .ot-person.is-repartidor .ot-person-icon{background:linear-gradient(135deg, var(--green), #17b978);}
+  .ot-person-text{min-width:0;display:flex;flex-direction:column;line-height:1.1;}
+  .ot-person-label{font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.2px;color:var(--gray-text);}
+  .ot-person-value{font-size:8.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ot-person-value.empty{font-weight:500;color:var(--gray-text);}
+
+  .orders-table-empty{padding:14px 10px;text-align:center;color:var(--gray-text);font-size:10.5px;}
+
+  /* ===== Contador de tiempo transcurrido desde que se envió cada mensaje ===== */
+  .o-sent-timer{
+    display:none;
+    align-items:center;
+    gap:5px;
+    font-size:11.5px;
+    font-weight:800;
+    color:var(--orange-dark);
+    background:#FFF1E6;
+    border-radius:999px;
+    padding:3px 10px;
+    margin-top:6px;
+    width:fit-content;
+    font-variant-numeric:tabular-nums;
+  }
+  .o-sent-timer.show{display:inline-flex;}
+  @media (max-width:980px){
+    .layout-grid{grid-template-columns:1fr;}
+    .map-panel{position:static;order:-1;}
+  }
+
+  /* ===== PANTALLA DE ACCESO (contraseña) ===== */
+  .lock-screen{
+    position:fixed;inset:0;
+    background:#111;
+    display:flex;align-items:center;justify-content:center;
+    z-index:500;
+  }
+  .lock-box{
+    background:#fff;
+    border-radius:12px;
+    padding:36px 32px;
+    width:100%;
+    max-width:340px;
+    text-align:center;
+  }
+  .lock-box .mark{
+    width:52px;height:52px;
+    background:var(--orange);
+    border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    margin:0 auto 16px;
+  }
+  .lock-box h2{font-size:17px;margin-bottom:6px;}
+  .lock-box p{font-size:13px;color:var(--gray-text);margin-bottom:18px;}
+  .lock-box input{
+    width:100%;
+    padding:12px 14px;
+    border:1.5px solid var(--gray-border);
+    border-radius:8px;
+    font-size:14px;
+    margin-bottom:10px;
+    text-align:center;
+    letter-spacing:1px;
+  }
+  .lock-box input:focus{outline:none;border-color:var(--orange);}
+  .lock-box button{
+    width:100%;
+    background:var(--orange);
+    color:#fff;
+    font-weight:700;
+    padding:12px;
+    border-radius:8px;
+    font-size:14px;
+  }
+  .lock-box button:hover{background:var(--orange-dark);}
+  .lock-error{
+    color:var(--red);
+    font-size:12.5px;
+    margin-bottom:10px;
+    display:none;
+  }
+  .lock-error.show{display:block;}
+  .lock-forgot{
+    display:block;
+    margin-top:14px;
+    font-size:12.5px;
+    color:var(--gray-text);
+    text-decoration:underline;
+  }
+  .lock-forgot:hover{color:var(--orange);}
+
+  /* ===== LISTA DE PEDIDOS (estilo moderno y colorido, tipo tarjeta) ===== */
+  .orders-list{display:flex;flex-direction:column;gap:16px;max-width:640px;margin:0;}
+  .orders-toolbar-fixed{
+    position:sticky;
+    top:82px;
+    z-index:390;
+    background:transparent;
+    padding-bottom:2px;
+  }
+  .order-search-wrap{
+    display:flex;align-items:center;gap:10px;
+    max-width:640px;margin:0 0 18px;
+    background:#fff;border-radius:14px;
+    padding:12px 16px;
+    box-shadow:0 6px 20px rgba(80,60,140,.14);
+  }
+  .order-search-wrap:focus-within{box-shadow:0 0 0 2px var(--orange);}
+  .order-search-wrap .order-search-icon{font-size:16px;color:var(--gray-text);}
+  .order-search-wrap input{
+    flex:1;border:none;outline:none;font-size:14px;background:transparent;
+  }
+  .print-all-btn{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    max-width:640px;margin:0 0 18px;
+    width:100%;
+    background:#111;color:#fff;font-weight:700;font-size:13.5px;
+    padding:12px;border-radius:12px;
+    box-shadow:0 6px 16px rgba(0,0,0,.18);
+  }
+  .print-all-btn:hover{background:#2a2a2a;}
+  @media (max-width:980px){ .orders-list{max-width:640px;margin:0;} }
+  .order-card{
+    background:#fff;
+    border:none;
+    border-radius:20px;
+    padding:0;
+    overflow:hidden;
+    box-shadow:0 8px 24px rgba(80,60,140,.12);
+    transition:transform .15s ease, box-shadow .15s ease;
+    zoom:0.8;
+  }
+  .order-card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(80,60,140,.16);}
+
+  .o-sent-banner{
+    display:none;
+    color:#3D6BFF;font-weight:900;font-size:34px;
+    text-align:center;
+    max-width:640px;margin:0 0 4px;
+    padding:6px 0;
+    letter-spacing:.5px;
+    text-shadow:0 2px 6px rgba(61,107,255,.25);
+  }
+  @media (max-width:980px){ .o-sent-banner{margin:0 0 -6px;} }
+  .o-sent-banner.show{display:block;}
+
+  /* --- Barra de título de la ficha (degradado) --- */
+  .order-card .o-titlebar{
+    background:linear-gradient(120deg, var(--orange) 0%, var(--pink) 55%, var(--purple) 100%);
+    color:#fff;
+    display:flex;align-items:center;justify-content:space-between;
+    gap:14px;flex-wrap:wrap;
+    padding:16px 20px;
+  }
+  .order-card .o-titlebar .o-tb-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .o-select-checkbox{
+    width:20px;height:20px;
+    accent-color:var(--orange);
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .order-card .o-titlebar .o-tb-icon{font-size:18px;}
+  .order-card .o-titlebar .o-avatar{
+    width:36px;height:36px;border-radius:50%;
+    background:rgba(255,255,255,.25);
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:800;color:#fff;
+    box-shadow:inset 0 0 0 2px rgba(255,255,255,.4);
+    flex-shrink:0;
+  }
+  .order-card .o-titlebar .o-client-name{font-size:18px;font-weight:800;letter-spacing:.2px;color:#111;}
+  .order-card .o-titlebar .o-date{font-size:14px;font-weight:800;color:#111;}
+  .order-card .o-titlebar .o-tb-right{display:flex;align-items:center;gap:8px;}
+  .order-card .o-titlebar .o-code-box{
+    background:rgba(255,255,255,.85);color:#111;
+    border-radius:20px;
+    padding:6px 14px;
+    font-size:16px;font-weight:900;
+    text-align:center;line-height:1.25;
+    backdrop-filter:blur(4px);
+  }
+  .order-card .o-titlebar .o-code-box b{display:block;font-size:9px;color:rgba(0,0,0,.6);font-weight:700;letter-spacing:.4px;}
+  .order-card .o-titlebar .o-total-box{
+    background:#fff;color:var(--orange-dark);
+    border-radius:20px;
+    padding:6px 16px;
+    font-size:15px;font-weight:800;
+    box-shadow:0 3px 8px rgba(0,0,0,.12);
+  }
+  .order-card .o-titlebar .o-tb-receipt-btn{
+    background:#fff;
+    color:var(--black);
+    width:48px;height:48px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 3px 8px rgba(0,0,0,.12);
+    flex-shrink:0;
+  }
+  .order-card .o-titlebar .o-tb-receipt-btn:hover{background:#EAE6FA;}
+  .order-card .o-titlebar .o-tb-receipt-btn svg{width:25px;height:25px;}
+
+  /* --- Cuerpo con secciones coloreadas (sin aspecto de formulario) --- */
+  .order-card .o-body{padding:14px 16px 4px;display:flex;flex-direction:column;gap:9px;}
+  .order-card .o-section{
+    background:#F9F8FF;
+    border:none;
+    border-left:4px solid var(--blue);
+    border-radius:12px;
+    padding:8px 12px 10px;
+  }
+  .order-card .o-body .o-section:nth-child(1){background:#A9C7FF;border-left-color:var(--blue);}
+  .order-card .o-body .o-section:nth-child(2){background:#FFF3EA;border-left-color:var(--orange);}
+  .order-card .o-body .o-section:nth-child(3){background:#8FE0BE;border-left-color:var(--green);}
+  .order-card .o-body .o-section:nth-child(4){background:#C9AEFF;border-left-color:var(--purple);}
+  .order-card .o-section-title{
+    display:flex;align-items:center;gap:6px;
+    font-size:15px;font-weight:900;color:#111;
+    text-transform:uppercase;letter-spacing:.5px;
+    padding-bottom:0;margin-bottom:6px;
+  }
+  .order-card .o-send-btn-title{
+    margin-left:auto;width:40px;height:40px;
+  }
+  .order-card .o-send-btn-title svg{width:19px;height:19px;}
+  .order-card .o-sec-icon{
+    width:20px;height:20px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:10.5px;flex-shrink:0;
+    background:rgba(0,0,0,.06);
+  }
+  .order-card .o-body .o-section:nth-child(1) .o-sec-icon{background:rgba(61,107,255,.15);}
+  .order-card .o-body .o-section:nth-child(2) .o-sec-icon{background:rgba(255,106,0,.15);}
+  .order-card .o-body .o-section:nth-child(3) .o-sec-icon{background:rgba(27,154,91,.15);}
+  .order-card .o-body .o-section:nth-child(4) .o-sec-icon{background:rgba(139,92,246,.15);}
+  .order-card .o-field-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:6px 12px;
+  }
+  .order-card .o-field label{
+    display:block;font-size:10px;font-weight:700;color:var(--gray-text);
+    margin-bottom:2px;
+  }
+  .order-card .o-field-value{
+    background:#fff;border:none;border-radius:8px;
+    padding:5px 9px;font-size:12px;color:var(--black);
+    min-height:14px;word-break:break-word;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
+  }
+  .order-card .o-items-box{
+    background:#fff;border:none;border-radius:8px;
+    padding:7px 10px;font-size:14px;font-weight:700;color:#111;white-space:pre-wrap;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
+  }
+  .order-card .o-line{font-size:12px;color:var(--black);margin-bottom:2px;}
+  .order-card .o-items{font-size:11.5px;color:var(--gray-text);white-space:pre-wrap;margin:6px 0;}
+  .order-card .o-wa-btn{
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    color:#0E7A46;text-align:center;
+  }
+  .order-card .o-wa-btn.sent{color:#8A8A8A;}
+  .order-card .o-del-btn{color:#B4231B;text-align:center;}
+  .orders-empty{text-align:center;color:var(--gray-text);padding:50px 10px;font-size:13px;}
+  .order-card .o-repartidor-row{
+    display:flex;align-items:center;gap:6px;margin:0 0 6px;
+  }
+  .order-card .o-repartidor-row:last-child{margin-bottom:0;}
+  .order-card .o-repartidor-row label{
+    font-size:14px;font-weight:800;color:#111;white-space:nowrap;
+    width:200px;flex-shrink:0;
+  }
+  .order-card .o-repartidor-input{
+    flex:1;padding:5px 9px;border:none;border-radius:8px;font-size:12px;outline:none;background:#fff;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
+  }
+  .order-card .o-repartidor-input:focus{box-shadow:0 0 0 2px var(--orange);}
+  .order-card .o-wa-repartidor-btn{color:#075E54;text-align:center;}
+  .order-card .o-phone-wrap{
+    flex:1;display:flex;align-items:center;
+    border:none;border-radius:10px;overflow:hidden;background:#fff;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
+  }
+  .order-card .o-phone-wrap:focus-within{box-shadow:0 0 0 2px var(--orange);}
+  .order-card .o-phone-prefix{
+    padding:5px 4px 5px 9px;font-size:12px;font-weight:700;color:var(--gray-text);
+    background:transparent;border-right:1px solid #EEE;white-space:nowrap;
+    border-top:none;border-left:none;border-bottom:none;
+    max-width:92px;cursor:pointer;outline:none;
+  }
+  .order-card .o-phone-input{
+    flex:1;min-width:0;padding:5px 9px 5px 6px;border:none;font-size:12px;outline:none;background:transparent;
+  }
+  .order-card .o-map-row{
+    display:flex;align-items:center;gap:6px;margin:0 0 6px;
+  }
+  .order-card .o-map-row label{
+    font-size:14px;font-weight:800;color:#111;white-space:nowrap;
+    width:200px;flex-shrink:0;
+  }
+  .order-card .o-map-link{color:#1a73e8;text-align:center;}
+  .order-card .o-recogida-btn{color:#5B3A29;text-align:center;}
+  .order-card .o-desc-row{
+    display:flex;flex-direction:column;gap:4px;margin:0;
+  }
+  .order-card .o-desc-row label{
+    font-size:14px;font-weight:800;color:#111;
+  }
+  .order-card .o-desc-textarea{
+    width:100%;padding:5px 9px;border:none;border-radius:8px;
+    font-size:12px;outline:none;resize:vertical;min-height:34px;background:#fff;margin-bottom:6px;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
+  }
+  .order-card .o-desc-textarea:focus{box-shadow:0 0 0 2px var(--purple);}
+  .order-card .o-proveedor-label{color:#111 !important;}
+  .order-card .o-phone-wrap-proveedor:focus-within{box-shadow:0 0 0 2px var(--purple);}
+  .order-card .o-recogida-label{color:#111 !important;}
+  .order-card .o-phone-wrap-recogida:focus-within{box-shadow:0 0 0 2px var(--green);}
+  .order-card .o-repartidor-input.o-recogida-input:focus{box-shadow:0 0 0 2px var(--green);}
+  .order-card .o-proveedor-msg-btn{color:var(--purple);text-align:center;}
+  .order-card .o-receipt-btn{color:var(--black);text-align:center;}
+
+  /* --- Barra de acciones: chips de colores en vez de barra de herramientas plana --- */
+  .order-card .o-actions{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:6px;
+    background:transparent;border-top:none;
+    padding:10px 14px 14px;
+  }
+  .order-card .o-actions a,
+  .order-card .o-actions button{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    background:#F3F1FA;border:none;border-radius:12px;
+    padding:12px 6px 9px;
+    font-size:10.5px;font-weight:700;
+    color:inherit;
+    transition:transform .12s ease, background .12s ease;
+  }
+  .order-card .o-actions a:hover,
+  .order-card .o-actions button:hover{background:#EAE6FA;transform:translateY(-2px);}
+  .order-card .o-actions .o-tool-icon{display:flex;}
+  .order-card .o-actions .o-tool-icon svg{width:34px;height:34px;}
+
+  /* --- Recuadro de contraseña inline para confirmar el borrado --- */
+  .o-del-confirm{
+    grid-column:1 / -1;
+    display:flex;align-items:center;gap:6px;
+    background:#FDECEC;border:1.5px solid var(--red);border-radius:12px;
+    padding:8px 10px;
+  }
+  .o-del-confirm input{
+    flex:1;min-width:0;padding:8px 10px;border:1.5px solid var(--gray-border);border-radius:8px;
+    font-size:12.5px;outline:none;background:#fff;
+  }
+  .o-del-confirm input:focus{border-color:var(--red);}
+  .o-del-confirm button{
+    padding:9px 12px;border-radius:8px;font-size:11px;font-weight:800;white-space:nowrap;flex:none;
+  }
+  .o-del-confirm .o-del-confirm-btn{background:var(--red);color:#fff;}
+  .o-del-confirm .o-del-confirm-btn:hover{background:#B4231B;}
+  .o-del-confirm .o-del-cancel-btn{background:#fff;color:#111;border:1.5px solid var(--gray-border);}
+  .o-del-confirm .o-del-cancel-btn:hover{background:#F3F1FA;}
+
+  /* ===== BOTÓN DE UBICACIÓN (buscador de dirección del proveedor) ===== */
+  .o-location-btn{
+    flex-shrink:0;
+    width:34px;height:34px;
+    display:flex;align-items:center;justify-content:center;
+    background:#fff;
+    border:none;
+    border-radius:10px;
+    font-size:15px;
+    box-shadow:0 1px 3px rgba(0,0,0,.08);
+  }
+  .o-location-btn:hover{background:#FFF3EA;}
+  .o-location-btn.has-location{color:var(--green);box-shadow:0 0 0 2px var(--green);}
+
+  /* ===== BOTÓN DE AGENDA DE CONTACTOS ===== */
+  .o-agenda-btn{
+    flex-shrink:0;
+    width:34px;height:34px;
+    display:flex;align-items:center;justify-content:center;
+    background:#fff;
+    border:none;
+    border-radius:10px;
+    font-size:15px;
+    box-shadow:0 1px 3px rgba(0,0,0,.08);
+  }
+  .o-agenda-btn:hover{background:#EFEAFF;}
+
+  /* ===== BOTÓN LATERAL DE ENVÍO (uno por fila: repartidor entrega, recogida y proveedor) ===== */
+  .o-send-btn{
+    flex-shrink:0;
+    width:46px;height:46px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--green);color:#fff;
+    border:none;
+    border-radius:12px;
+    box-shadow:0 1px 3px rgba(0,0,0,.08);
+  }
+  .o-send-btn svg{width:22px;height:22px;}
+  .o-send-btn:hover{background:#158049;transform:translateY(-1px);}
+  .o-send-btn.sent{background:#D32F2F;}
+  .o-send-btn.sent:hover{background:#B4231B;}
+
+  /* ===== MODAL BUSCADOR DE UBICACIÓN ===== */
+  .location-overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.6);
+    display:none;
+    align-items:center;justify-content:center;
+    z-index:950;
+    padding:20px;
+  }
+  .location-overlay.show{display:flex;}
+  .location-box{
+    background:#fff;
+    border-radius:12px;
+    width:100%;max-width:380px;
+    max-height:80vh;
+    display:flex;flex-direction:column;
+    overflow:hidden;
+  }
+  .location-box .loc-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 16px;border-bottom:1px solid var(--gray-border);
+  }
+  .location-box .loc-header h3{font-size:14px;font-weight:800;}
+  .location-close{
+    width:26px;height:26px;border-radius:50%;
+    background:#F3F3F3;color:var(--black);font-size:13px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .location-close:hover{background:#E5E5E5;}
+  .loc-search-wrap{
+    display:flex;align-items:center;gap:8px;
+    margin:14px 16px 0;
+    padding:8px 12px;
+    border:1.5px solid var(--gray-border);
+    border-radius:8px;
+  }
+  .loc-search-wrap:focus-within{border-color:var(--orange);}
+  .loc-search-wrap .loc-icon{font-size:14px;color:var(--gray-text);}
+  .loc-search-wrap input{
+    flex:1;border:none;outline:none;font-size:13.5px;background:transparent;
+  }
+  .loc-results{
+    margin:10px 16px 16px;
+    overflow-y:auto;
+    flex:1;
+  }
+  .loc-result-item{
+    padding:10px 8px;
+    border-bottom:1px solid #F0F0F0;
+    font-size:12.5px;
+    line-height:1.4;
+  }
+  .loc-result-item:hover{background:#FFF3EA;cursor:pointer;}
+  .loc-result-item:last-child{border-bottom:none;}
+  .loc-hint,.loc-empty,.loc-loading{
+    text-align:center;color:var(--gray-text);font-size:12.5px;padding:20px 10px;
+  }
+
+  /* ===== MODAL AGENDA DE CONTACTOS ===== */
+  .agenda-overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.6);
+    display:none;
+    align-items:center;justify-content:center;
+    z-index:960;
+    padding:20px;
+  }
+  .agenda-overlay.show{display:flex;}
+  .agenda-box{
+    background:#fff;
+    border-radius:12px;
+    width:100%;max-width:380px;
+    max-height:85vh;
+    display:flex;flex-direction:column;
+    overflow:hidden;
+  }
+  .agenda-box .ag-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 16px;border-bottom:1px solid var(--gray-border);
+  }
+  .agenda-box .ag-header h3{font-size:14px;font-weight:800;}
+  .agenda-close{
+    width:26px;height:26px;border-radius:50%;
+    background:#F3F3F3;color:var(--black);font-size:13px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .agenda-close:hover{background:#E5E5E5;}
+  .ag-search-wrap{
+    display:flex;align-items:center;gap:8px;
+    margin:14px 16px 0;
+    padding:8px 12px;
+    border:1.5px solid var(--gray-border);
+    border-radius:8px;
+  }
+  .ag-search-wrap:focus-within{border-color:var(--purple);}
+  .ag-search-wrap .ag-icon{font-size:14px;color:var(--gray-text);}
+  .ag-search-wrap input{
+    flex:1;border:none;outline:none;font-size:13.5px;background:transparent;
+  }
+  .ag-list{
+    margin:10px 16px 0;
+    overflow-y:auto;
+    flex:1;
+    min-height:60px;
+  }
+  .ag-item{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 4px;
+    border-bottom:1px solid #F0F0F0;
+  }
+  .ag-item:last-child{border-bottom:none;}
+  .ag-item-icon,.ag-item-text{cursor:pointer;}
+  .ag-item-icon:hover ~ .ag-item-text .ag-item-name,
+  .ag-item-text:hover .ag-item-name{color:var(--purple);}
+  .ag-item-icon{
+    flex-shrink:0;width:34px;height:34px;border-radius:50%;
+    background:linear-gradient(135deg, var(--purple), var(--blue));
+    color:#fff;display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:13px;
+  }
+  .ag-item-text{flex:1;min-width:0;}
+  .ag-item-name{font-size:13.5px;font-weight:700;color:var(--black);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ag-item-phone{font-size:12px;color:var(--gray-text);}
+  .ag-item-del{
+    flex-shrink:0;width:26px;height:26px;border-radius:50%;
+    background:#FDECEC;color:var(--red);font-size:12px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .ag-item-del:hover{background:#F9D3D0;}
+  .ag-empty{text-align:center;color:var(--gray-text);font-size:12.5px;padding:20px 10px;}
+  .ag-add-wrap{
+    padding:12px 16px 16px;
+    border-top:1px solid var(--gray-border);
+    display:flex;flex-direction:column;gap:8px;
+    flex-shrink:0;
+  }
+  .ag-add-title{font-size:11.5px;font-weight:800;color:var(--gray-text);text-transform:uppercase;letter-spacing:.4px;}
+  .ag-add-wrap input, .ag-add-wrap select{
+    border:1.5px solid var(--gray-border);border-radius:8px;
+    padding:8px 10px;font-size:13px;outline:none;background:#fff;
+  }
+  .ag-add-wrap input:focus, .ag-add-wrap select:focus{border-color:var(--purple);}
+  .ag-add-phone-row{display:flex;gap:6px;}
+  #agContactCode{max-width:100px;}
+  #agContactPhone{flex:1;min-width:0;}
+  .ag-add-btn{
+    background:var(--purple);color:#fff;font-weight:700;
+    padding:10px;border-radius:8px;font-size:13.5px;
+  }
+  .ag-add-btn:hover{background:#7C4FE0;}
+
+  /* ===== MODAL RECIBO ===== */
+  .receipt-overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.6);
+    display:none;
+    align-items:center;justify-content:flex-end;
+    z-index:900;
+    padding:20px;
+  }
+  .receipt-overlay.show{display:flex;}
+  .receipt-box{
+    background:transparent;
+    border-radius:12px;
+    width:min(94vw,440px);
+    max-height:96vh;
+    overflow-y:auto;
+    padding:0;
+    position:relative;
+  }
+  .receipt-close{
+    position:absolute;
+    top:8px;right:8px;
+    width:28px;height:28px;
+    border-radius:50%;
+    background:#fff;
+    color:var(--black);
+    font-size:14px;
+    display:flex;align-items:center;justify-content:center;
+    z-index:2;
+  }
+  .receipt-inner{background:#fff;padding:30px 24px;border-radius:12px;}
+  .receipt-inner.printing{
+    animation:receiptToPrinter .7s ease forwards;
+  }
+  @keyframes receiptToPrinter{
+    0%{transform:translateY(0) scale(1);opacity:1;}
+    100%{transform:translateY(70px) scale(.82);opacity:.25;}
+  }
+  .printer-icon-wrap{
+    display:flex;align-items:center;justify-content:center;
+    height:0;overflow:visible;
+    position:relative;
+  }
+  .printer-icon-wrap .printer-icon{
+    font-size:34px;
+    opacity:0;
+    transform:translateY(-20px) scale(.7);
+    transition:opacity .3s ease, transform .3s ease;
+  }
+  .printer-icon-wrap .printer-icon.active{
+    opacity:1;
+    transform:translateY(-30px) scale(1);
+  }
+  .receipt-inner .r-header{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:6px;text-align:center;}
+  .receipt-inner .r-mark{width:48px;height:48px;background:var(--orange);border-radius:10px;display:flex;align-items:center;justify-content:center;}
+  .receipt-inner .r-name{font-weight:800;font-size:23px;letter-spacing:.5px;}
+  .receipt-inner .r-sub{font-size:14px;color:var(--gray-text);text-align:center;margin-bottom:22px;}
+  .receipt-inner .r-divider{border-top:1px dashed #999;margin:20px 0;}
+  .receipt-inner .r-row{display:flex;justify-content:space-between;gap:10px;font-size:15px;margin-bottom:14px;}
+  .receipt-inner .r-label{color:var(--gray-text);white-space:nowrap;}
+  .receipt-inner .r-val{text-align:right;word-break:break-word;}
+  .receipt-inner table{width:100%;border-collapse:collapse;font-size:14.5px;margin:16px 0;}
+  .receipt-inner th{text-align:left;font-size:13px;color:var(--gray-text);padding-bottom:10px;border-bottom:1px dashed #999;}
+  .receipt-inner td{padding:12px 0;border-bottom:1px dashed #ddd;vertical-align:top;}
+  .receipt-inner .r-total{display:flex;justify-content:space-between;font-size:18px;font-weight:800;margin-top:20px;}
+  .receipt-inner .r-total .amount{color:var(--orange);}
+  .receipt-inner .r-footer{margin-top:26px;text-align:center;font-size:13px;color:#999;}
+  .receipt-print-btn{display:block;width:100%;margin-top:22px;background:#111;color:#fff;border:none;padding:15px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;}
+  @media print{
+    body *{visibility:hidden !important;}
+    .receipt-overlay, .receipt-overlay *{visibility:visible !important;}
+    .receipt-overlay{
+      position:absolute !important;top:0 !important;left:0 !important;
+      inset:auto !important;
+      width:100% !important;
+      background:none !important;padding:0 !important;
+      display:block !important;
+    }
+    .receipt-box{
+      position:static !important;
+      box-shadow:none !important;max-height:none !important;overflow:visible !important;
+      width:100% !important;background:#fff !important;
+      border-radius:0 !important;
+    }
+    .receipt-close,.receipt-print-btn{display:none !important;}
+    .printer-icon-wrap{display:none !important;}
+    .receipt-inner{padding:5px 6px !important;border-radius:0 !important;}
+    .receipt-inner .r-mark{width:28px !important;height:28px !important;}
+    .receipt-inner .r-name{font-size:13px !important;}
+    .receipt-inner .r-sub{font-size:9.5px !important;margin-bottom:8px !important;}
+    .receipt-inner .r-divider{margin:6px 0 !important;}
+    .receipt-inner .r-row{font-size:9.5px !important;margin-bottom:5px !important;}
+    .receipt-inner table{font-size:9.5px !important;margin:6px 0 !important;}
+    .receipt-inner th{font-size:8.5px !important;padding-bottom:3px !important;}
+    .receipt-inner td{padding:4px 0 !important;}
+    .receipt-inner .r-total{font-size:11px !important;margin-top:6px !important;}
+    .receipt-inner .r-footer{font-size:8.5px !important;margin-top:8px !important;}
+  }
+  @page{ size:58mm auto; margin:0; }
+</style>
+</head>
+<body>
+
+  <!-- ===== PANTALLA DE ACCESO ===== -->
+  <div class="lock-screen" id="lockScreen">
+    <div class="lock-box">
+      <div class="mark">
+        <svg viewBox="0 0 48 48" width="30" height="30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 15h14l-1.4 15.5a2 2 0 0 1-2 1.8H12.4a2 2 0 0 1-2-1.8L9 15z" fill="#fff" opacity=".85"/>
+          <path d="M13 15v-2.5a3 3 0 0 1 3-3h1a3 3 0 0 1 3 3V15" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>
+          <path d="M20 20h16l-1.6 17.5a2 2 0 0 1-2 1.8H23.6a2 2 0 0 1-2-1.8L20 20z" fill="#fff"/>
+          <path d="M24.5 20v-2.8a3.5 3.5 0 0 1 3.5-3.5h1a3.5 3.5 0 0 1 3.5 3.5V20" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2 data-i18n="lock_title">Acceso a Pedidos</h2>
+      <p data-i18n="lock_hint">Introduce tu correo y contraseña del panel de administración.</p>
+      <div class="lock-error" id="lockError" data-i18n="lock_error">Contraseña incorrecta.</div>
+      <input type="email" id="lockEmail" placeholder="Correo electrónico" autocomplete="off">
+      <input type="password" id="lockPassword" placeholder="Contraseña" data-i18n-placeholder="password_placeholder" autocomplete="off">
+      <button type="button" id="lockSubmit" data-i18n="enter_btn">Entrar</button>
+    </div>
+  </div>
+
+  <div id="pedidosContent">
+
+  <header>
+    <div class="logo">
+      <div class="mark">
+        <svg viewBox="0 0 48 48" width="30" height="30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 15h14l-1.4 15.5a2 2 0 0 1-2 1.8H12.4a2 2 0 0 1-2-1.8L9 15z" fill="#fff" opacity=".85"/>
+          <path d="M13 15v-2.5a3 3 0 0 1 3-3h1a3 3 0 0 1 3 3V15" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>
+          <path d="M20 20h16l-1.6 17.5a2 2 0 0 1-2 1.8H23.6a2 2 0 0 1-2-1.8L20 20z" fill="#fff"/>
+          <path d="M24.5 20v-2.8a3.5 3.5 0 0 1 3.5-3.5h1a3.5 3.5 0 0 1 3.5 3.5V20" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="name">PETRA</div>
+    </div>
+    <div class="title" data-i18n="orders_title">🧾 Pedidos recibidos</div>
+    <div class="lang-switch" id="langSwitch">
+      <button type="button" data-lang="es">ES</button>
+      <button type="button" data-lang="fr">FR</button>
+      <button type="button" data-lang="en">EN</button>
+      <button type="button" data-lang="ar">AR</button>
+    </div>
+    <button type="button" class="logout-btn icon-btn" id="changePasswordBtn" title="Cambiar contraseña">🔑</button>
+    <button type="button" class="logout-btn" id="logoutBtn" data-i18n="logout_btn">🔒 Cerrar sesión</button>
+  </header>
+
+  <!-- ===== MODAL CAMBIAR CONTRASEÑA ===== -->
+  <div class="change-pass-overlay" id="changePassOverlay">
+    <div class="change-pass-box">
+      <div class="mark" style="width:52px;height:52px;background:var(--orange);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+        <svg viewBox="0 0 48 48" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 15h14l-1.4 15.5a2 2 0 0 1-2 1.8H12.4a2 2 0 0 1-2-1.8L9 15z" fill="#fff" opacity=".85"/>
+          <path d="M13 15v-2.5a3 3 0 0 1 3-3h1a3 3 0 0 1 3 3V15" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>
+          <path d="M20 20h16l-1.6 17.5a2 2 0 0 1-2 1.8H23.6a2 2 0 0 1-2-1.8L20 20z" fill="#fff"/>
+          <path d="M24.5 20v-2.8a3.5 3.5 0 0 1 3.5-3.5h1a3.5 3.5 0 0 1 3.5 3.5V20" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2 data-i18n="change_password_title">Cambiar contraseña</h2>
+      <p data-i18n="change_password_hint">Introduce tu contraseña actual y la nueva contraseña.<br>Mínimo 12 caracteres, con mayúsculas, minúsculas, números y símbolos.</p>
+      <div class="change-pass-error" id="cpError" data-i18n="old_password_wrong">Contraseña actual incorrecta.</div>
+      <div class="change-pass-success" id="cpSuccess" data-i18n="password_updated">✓ Contraseña actualizada correctamente.</div>
+      <input type="password" id="cpOldPassword" placeholder="Contraseña antigua" data-i18n-placeholder="old_password_placeholder" autocomplete="off">
+      <input type="password" id="cpNewPassword" placeholder="Nueva contraseña" data-i18n-placeholder="new_password_placeholder" autocomplete="off">
+      <input type="password" id="cpConfirmPassword" placeholder="Confirmar nueva contraseña" data-i18n-placeholder="confirm_password_placeholder" autocomplete="off">
+      <button type="button" class="cp-save-btn" id="cpSaveBtn" data-i18n="save_new_password">Guardar nueva contraseña</button>
+      <button type="button" class="cp-cancel-btn" id="cpCancelBtn" data-i18n="cancel_btn">Cancelar</button>
+    </div>
+  </div>
+
+  <div class="page-wrap">
+    <div class="orders-toolbar-fixed">
+      <div class="order-search-wrap">
+        <span class="order-search-icon">🔍</span>
+        <input type="text" id="orderSearchInput" dir="auto" placeholder="Buscar pedido por número (ej. 001H)" data-i18n-placeholder="search_order_placeholder" autocomplete="off" oninput="filterOrders()">
+      </div>
+      <button type="button" class="print-all-btn" onclick="printAllOrders()" data-i18n="print_all_btn">🖨️ Imprimir todos los pedidos</button>
+      <div class="bulk-select-bar">
+        <label class="select-all-label">
+          <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)">
+          <span>Seleccionar todos</span>
+        </label>
+        <button type="button" class="bulk-delete-trigger-btn" id="bulkDeleteBtn" onclick="openBulkDeleteModal()" style="display:none;">🗑️ Borrar seleccionados (<span id="bulkDeleteCountNum">0</span>)</button>
+      </div>
+    </div>
+    <div class="orders-list" id="ordersList" data-i18n="loading_orders">Cargando pedidos…</div>
+  </div>
+
+  </div>
+
+  <!-- ===== MODAL BORRAR PEDIDOS SELECCIONADOS (con contraseña) ===== -->
+  <div class="bulk-delete-overlay" id="bulkDeleteOverlay">
+    <div class="bulk-delete-box">
+      <h2>⚠️ Confirmar borrado</h2>
+      <p id="bulkDeleteMsg">¿Borrar los pedidos seleccionados?</p>
+      <input type="password" id="bulkDeletePassword" placeholder="Contraseña" autocomplete="off">
+      <div class="bulk-delete-error" id="bulkDeleteError">Contraseña incorrecta.</div>
+      <button type="button" class="bd-confirm-btn" id="bdConfirmBtn">Borrar pedidos</button>
+      <button type="button" class="bd-cancel-btn" id="bdCancelBtn">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- ===== MODAL RECIBO ===== -->
+  <div class="receipt-overlay" id="receiptOverlay">
+    <div class="receipt-box">
+      <button type="button" class="receipt-close" id="receiptCloseBtn">✕</button>
+      <div id="receiptContent"></div>
+      <div class="printer-icon-wrap"><span class="printer-icon" id="printerIcon">🖨️</span></div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL BUSCADOR DE UBICACIÓN DEL PROVEEDOR ===== -->
+  <div class="location-overlay" id="locationOverlay">
+    <div class="location-box">
+      <div class="loc-header">
+        <h3 id="locationTitle" data-i18n="location_modal_title">📍 Buscar ubicación del proveedor</h3>
+        <button type="button" class="location-close" id="locationCloseBtn">✕</button>
+      </div>
+      <div class="loc-search-wrap">
+        <span class="loc-icon">🔍</span>
+        <input type="text" id="locationSearchInput" dir="auto" placeholder="Escribe el nombre del lugar o dirección…" data-i18n-placeholder="location_search_placeholder" autocomplete="off">
+      </div>
+      <div class="loc-results" id="locationResults">
+        <div class="loc-hint" data-i18n="location_hint">Escribe al menos 3 letras para ver sugerencias.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL AGENDA DE CONTACTOS (repartidores y proveedores guardados) ===== -->
+  <div class="agenda-overlay" id="agendaOverlay">
+    <div class="agenda-box">
+      <div class="ag-header">
+        <h3 data-i18n="agenda_title">📇 Agenda de contactos</h3>
+        <button type="button" class="agenda-close" id="agendaCloseBtn">✕</button>
+      </div>
+      <div class="ag-search-wrap">
+        <span class="ag-icon">🔍</span>
+        <input type="text" id="agendaSearchInput" dir="auto" placeholder="Buscar por nombre…" data-i18n-placeholder="agenda_search_placeholder" autocomplete="off" oninput="renderAgendaList(this.value)">
+      </div>
+      <div class="ag-list" id="agendaList"></div>
+      <div class="ag-add-wrap">
+        <div class="ag-add-title" data-i18n="agenda_add_title">➕ Añadir nuevo contacto</div>
+        <input type="text" id="agContactName" placeholder="Nombre y apellido" data-i18n-placeholder="agenda_name_placeholder" dir="auto" autocomplete="off">
+        <div class="ag-add-phone-row">
+          <select id="agContactCode"></select>
+          <input type="tel" id="agContactPhone" placeholder="600 000 000" autocomplete="off" maxlength="9" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'').slice(0,9)">
+        </div>
+        <input type="text" id="agContactAddress" placeholder="Dirección (opcional, para proveedores)" data-i18n-placeholder="agenda_address_placeholder" dir="auto" autocomplete="off">
+        <button type="button" class="ag-add-btn" onclick="addAgendaContact()" data-i18n="agenda_save_btn">Guardar en la agenda</button>
+      </div>
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://ortnsekmoxnxxyklxcsr.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_uGJm-mdrUHz3qVpjvVRZzg_cg0BgZfO';
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  function escHtml(str){
+    return (str === null || str === undefined) ? '' : str.toString()
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+
+<script>
+  // ===== Control de acceso: login real con Supabase Auth (mismo usuario que el panel de administración) =====
+  const lockScreen = document.getElementById('lockScreen');
+  const pedidosContent = document.getElementById('pedidosContent');
+  const lockEmail = document.getElementById('lockEmail');
+  const lockPassword = document.getElementById('lockPassword');
+  const lockError = document.getElementById('lockError');
+  const lockSubmit = document.getElementById('lockSubmit');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  let isAuthed = false;
+  function showPedidos(){
+    isAuthed = true;
+    lockScreen.style.display = 'none';
+    pedidosContent.style.display = 'block';
+    loadOrdersList();
+  }
+  function showLock(){
+    isAuthed = false;
+    lockScreen.style.display = 'flex';
+    pedidosContent.style.display = 'none';
+    lockPassword.value = '';
+    lockError.classList.remove('show');
+    lockEmail.focus();
+  }
+  async function tryLogin(){
+    lockSubmit.disabled = true;
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email: lockEmail.value.trim(),
+      password: lockPassword.value,
+    });
+    lockSubmit.disabled = false;
+    if(error || !data.session){
+      lockError.textContent = 'Correo o contraseña incorrectos.';
+      lockError.classList.add('show');
+      return;
+    }
+    showPedidos();
+  }
+  lockSubmit.addEventListener('click', tryLogin);
+  lockPassword.addEventListener('keydown', (e) => { if(e.key === 'Enter') tryLogin(); });
+  lockEmail.addEventListener('keydown', (e) => { if(e.key === 'Enter') tryLogin(); });
+  logoutBtn.addEventListener('click', async () => {
+    await supabaseClient.auth.signOut();
+    showLock();
+  });
+
+  // ===== Cambiar contraseña (usuario ya logueado) =====
+  const changePasswordBtn = document.getElementById('changePasswordBtn');
+  const changePassOverlay = document.getElementById('changePassOverlay');
+  const cpOldPassword = document.getElementById('cpOldPassword');
+  const cpNewPassword = document.getElementById('cpNewPassword');
+  const cpConfirmPassword = document.getElementById('cpConfirmPassword');
+  const cpError = document.getElementById('cpError');
+  const cpSuccess = document.getElementById('cpSuccess');
+  const cpSaveBtn = document.getElementById('cpSaveBtn');
+  const cpCancelBtn = document.getElementById('cpCancelBtn');
+
+  function openChangePassModal(){
+    cpOldPassword.value = '';
+    cpNewPassword.value = '';
+    cpConfirmPassword.value = '';
+    cpError.classList.remove('show');
+    cpSuccess.classList.remove('show');
+    changePassOverlay.classList.add('show');
+    cpOldPassword.focus();
+  }
+  function closeChangePassModal(){
+    changePassOverlay.classList.remove('show');
+  }
+  changePasswordBtn.addEventListener('click', openChangePassModal);
+  cpCancelBtn.addEventListener('click', closeChangePassModal);
+  changePassOverlay.addEventListener('click', (e) => {
+    if(e.target === changePassOverlay) closeChangePassModal();
+  });
+
+  cpSaveBtn.addEventListener('click', async () => {
+    cpError.classList.remove('show');
+    cpSuccess.classList.remove('show');
+
+    const { data: userData } = await supabaseClient.auth.getUser();
+    const email = userData && userData.user ? userData.user.email : null;
+    if(!email){
+      cpError.textContent = 'Tu sesión expiró. Cierra sesión y vuelve a entrar.';
+      cpError.classList.add('show');
+      return;
+    }
+    const { error: checkErr } = await supabaseClient.auth.signInWithPassword({ email, password: cpOldPassword.value });
+    if(checkErr){
+      cpError.textContent = 'La contraseña antigua no es correcta.';
+      cpError.classList.add('show');
+      return;
+    }
+    if(cpNewPassword.value.length < 12){
+      cpError.textContent = 'La nueva contraseña debe tener al menos 12 caracteres.';
+      cpError.classList.add('show');
+      return;
+    }
+    if(!/[a-z]/.test(cpNewPassword.value)){
+      cpError.textContent = 'La nueva contraseña debe incluir al menos una letra minúscula.';
+      cpError.classList.add('show');
+      return;
+    }
+    if(!/[A-Z]/.test(cpNewPassword.value)){
+      cpError.textContent = 'La nueva contraseña debe incluir al menos una letra mayúscula.';
+      cpError.classList.add('show');
+      return;
+    }
+    if(!/[0-9]/.test(cpNewPassword.value)){
+      cpError.textContent = 'La nueva contraseña debe incluir al menos un número.';
+      cpError.classList.add('show');
+      return;
+    }
+    if(!/[^A-Za-z0-9]/.test(cpNewPassword.value)){
+      cpError.textContent = 'La nueva contraseña debe incluir al menos un símbolo (ej: ! @ # $ %).';
+      cpError.classList.add('show');
+      return;
+    }
+    if(cpNewPassword.value !== cpConfirmPassword.value){
+      cpError.textContent = 'La nueva contraseña y la confirmación no coinciden.';
+      cpError.classList.add('show');
+      return;
+    }
+
+    const { error: updateErr } = await supabaseClient.auth.updateUser({ password: cpNewPassword.value });
+    if(updateErr){
+      cpError.textContent = 'No se pudo actualizar la contraseña: ' + updateErr.message;
+      cpError.classList.add('show');
+      return;
+    }
+    cpSuccess.classList.add('show');
+    cpOldPassword.value = '';
+    cpNewPassword.value = '';
+    cpConfirmPassword.value = '';
+    setTimeout(closeChangePassModal, 1500);
+  });
+
+  document.getElementById('agendaCloseBtn').addEventListener('click', closeAgenda);
+  document.getElementById('agendaOverlay').addEventListener('click', (e) => {
+    if(e.target.id === 'agendaOverlay') closeAgenda();
+  });
+
+  // ===== Número de pedido = mismo código de la prenda comprada =====
+  // Usa el código del primer artículo del pedido (misma fórmula que en el panel admin),
+  // así el número de pedido y el código de la prenda son siempre el mismo.
+  function orderCode(order){
+    const items = (order && order.items) || [];
+    const firstItem = items.length ? items[0] : null;
+    if(firstItem && firstItem.code){
+      return firstItem.code;
+    }
+    const firstItemId = firstItem ? firstItem.id : null;
+    if(firstItemId !== null && firstItemId !== undefined && firstItemId !== ''){
+      return productCode(firstItemId);
+    }
+    // Pedido sin artículos identificables: usamos el id del propio pedido como respaldo.
+    const fallbackId = (order && order.id) || 0;
+    return 'PT-' + Number(fallbackId).toString(36).toUpperCase().padStart(4,'0');
+  }
+  window.orderCode = orderCode;
+
+  // ===== Código corto del producto (letras + números), ej: AN-2515 =====
+  // Misma fórmula que en el panel admin, para que coincida con el código mostrado en cada producto.
+  function productCode(id){
+    const n = Number(String(id).replace(/[^0-9]/g,'')) || 0;
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const l1 = letters[Math.floor(n/26)%26];
+    const l2 = letters[n%26];
+    const digits = String(n).slice(-4).padStart(4,'0');
+    return `${l1}${l2}-${digits}`;
+  }
+  window.productCode = productCode;
+
+  // ===== Pedidos y WhatsApp de agradecimiento =====
+  const STORE_CONTACT_PHONE = '+212 700 7000 60'; // 📌 número de WhatsApp de la tienda (solo referencia)
+  const ordersList = document.getElementById('ordersList');
+  const receiptOverlay = document.getElementById('receiptOverlay');
+  const receiptContent = document.getElementById('receiptContent');
+  const receiptCloseBtn = document.getElementById('receiptCloseBtn');
+
+  function waThankYouMessage(order){
+    const nombre = order.first_name ? order.first_name : '';
+    const itemsText = (order.items || []).map((i, idx) => `${idx + 1}. [${i.code || productCode(i.id)}] ${i.name}${i.color ? ' / ' + i.color : ''}${i.size ? ' / ' + i.size : ''} x${i.qty}`).join('\n');
+    const messages = {
+      ar: `${nombre ? `مرحباً ${nombre}!` : 'مرحباً!'} 🧡 شكراً لشرائك من PETRA.\n\n` +
+        `🔢 رقم الطلب: ${orderCode(order)}\n` +
+        `🧾 طلبك:\n${itemsText || '—'}\n\n` +
+        `لقد استلمنا طلبك بمبلغ ${order.total} درهم ونحن نجهزه الآن. سنخبرك بمجرد إرساله إلى عنوانك. لأي استفسار أو لمعرفة مكان طلبك، اتصل بنا على هذا الرقم: \u2066${STORE_CONTACT_PHONE}\u2069. شكراً لثقتك بنا!`,
+      fr: `${nombre ? `Bonjour ${nombre} !` : 'Bonjour !'} 🧡 Merci pour votre achat chez PETRA.\n\n` +
+        `🔢 Commande n° ${orderCode(order)}\n` +
+        `🧾 Votre commande :\n${itemsText || '—'}\n\n` +
+        `Nous avons bien reçu votre commande de ${order.total} DH et nous la préparons. Nous vous prévenons dès qu'elle part vers votre adresse. Pour toute question ou pour savoir où en est votre commande, appelez-nous au : \u2066${STORE_CONTACT_PHONE}\u2069. Merci pour votre confiance !`,
+      es: `${nombre ? `¡Hola ${nombre}!` : '¡Hola!'} 🧡 Gracias por tu compra en PETRA.\n\n` +
+        `🔢 N.º de pedido: ${orderCode(order)}\n` +
+        `🧾 Tu pedido:\n${itemsText || '—'}\n\n` +
+        `Hemos recibido tu pedido por ${order.total} DH y ya lo estamos preparando. Te avisaremos en cuanto salga hacia tu dirección. Para cualquier consulta o para saber dónde está tu pedido, llámanos al: ${STORE_CONTACT_PHONE}. ¡Gracias por confiar en nosotros!`,
+      en: `${nombre ? `Hello ${nombre}!` : 'Hello!'} 🧡 Thank you for your purchase at PETRA.\n\n` +
+        `🔢 Order No.: ${orderCode(order)}\n` +
+        `🧾 Your order:\n${itemsText || '—'}\n\n` +
+        `We have received your order for ${order.total} DH and we are preparing it now. We'll let you know as soon as it's on its way to your address. For any questions or to check your order status, call us at: ${STORE_CONTACT_PHONE}. Thank you for trusting us!`,
+    };
+    const lang = (order && order.lang && messages[order.lang]) ? order.lang : 'es';
+    return messages[lang];
+  }
+
+  function sendThankYouToClient(orderId){
+    const order = currentOrders.find(o => o.id === orderId);
+    if(!order) return;
+    const phoneDigits = (order.phone || '').replace(/[^0-9]/g,'');
+    if(!phoneDigits){
+      alert('Este pedido no tiene teléfono del cliente.');
+      return;
+    }
+    const waUrl = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(waThankYouMessage(order))}`;
+    window.open(waUrl, '_blank', 'noopener');
+    markOrderNotified(orderId);
+    order.notified = true;
+    const btn = document.getElementById(`sendBtn_cliente_${orderId}`);
+    if(btn) btn.classList.add('sent');
+    showSentBanner(orderId);
+  }
+  window.sendThankYouToClient = sendThankYouToClient;
+
+  // ===== Lista de códigos de país para los teléfonos de repartidor =====
+  const COUNTRY_CODES = [
+    { code:'212', label:'🇲🇦 +212' },
+    { code:'34',  label:'🇪🇸 +34'  },
+    { code:'33',  label:'🇫🇷 +33'  },
+    { code:'32',  label:'🇧🇪 +32'  },
+    { code:'31',  label:'🇳🇱 +31'  },
+    { code:'49',  label:'🇩🇪 +49'  },
+    { code:'39',  label:'🇮🇹 +39'  },
+    { code:'351', label:'🇵🇹 +351' },
+    { code:'44',  label:'🇬🇧 +44'  },
+    { code:'1',   label:'🇺🇸 +1'   },
+  ];
+  function countryOptionsHtml(selectedCode){
+    return COUNTRY_CODES.map(c =>
+      `<option value="${c.code}" ${c.code === selectedCode ? 'selected' : ''}>${c.label}</option>`
+    ).join('');
+  }
+
+  // ===== Agenda de contactos (repartidores y proveedores guardados, reutilizables en cualquier pedido) =====
+  const AGENDA_KEY = 'petra_agenda_contactos';
+  let agendaTarget = null; // { orderId, kind } del campo que abrió la agenda
+
+  function getAgendaContacts(){
+    try{ return JSON.parse(localStorage.getItem(AGENDA_KEY)) || []; }
+    catch(e){ return []; }
+  }
+  function saveAgendaContacts(list){
+    localStorage.setItem(AGENDA_KEY, JSON.stringify(list));
+  }
+
+  function openAgenda(orderId, kind){
+    agendaTarget = { orderId, kind };
+    const codeSelect = document.getElementById('agContactCode');
+    if(codeSelect) codeSelect.innerHTML = countryOptionsHtml('212');
+    document.getElementById('agendaSearchInput').value = '';
+    document.getElementById('agContactName').value = '';
+    document.getElementById('agContactPhone').value = '';
+    document.getElementById('agContactAddress').value = '';
+    renderAgendaList('');
+    document.getElementById('agendaOverlay').classList.add('show');
+  }
+  window.openAgenda = openAgenda;
+
+  function closeAgenda(){
+    document.getElementById('agendaOverlay').classList.remove('show');
+    agendaTarget = null;
+  }
+  window.closeAgenda = closeAgenda;
+
+  function renderAgendaList(filter){
+    const list = document.getElementById('agendaList');
+    if(!list) return;
+    const contacts = getAgendaContacts();
+    const f = (filter || '').trim().toLowerCase();
+    const filtered = f ? contacts.filter(c => c.name.toLowerCase().includes(f)) : contacts;
+    if(!filtered.length){
+      list.innerHTML = `<div class="ag-empty">${contacts.length ? 'Sin resultados para esa búsqueda.' : 'Aún no hay contactos guardados. Añade el primero abajo 👇'}</div>`;
+      return;
+    }
+    list.innerHTML = filtered.map(c => {
+      const realIndex = contacts.indexOf(c);
+      const initials = c.name.trim().split(/\s+/).slice(0,2).map(w => w[0] || '').join('').toUpperCase();
+      return `
+        <div class="ag-item">
+          <div class="ag-item-icon" onclick="selectAgendaContact(${realIndex})">${initials || '?'}</div>
+          <div class="ag-item-text" onclick="selectAgendaContact(${realIndex})">
+            <div class="ag-item-name">${c.name}</div>
+            <div class="ag-item-phone">+${c.code} ${c.phone}</div>
+            ${c.address ? `<div class="ag-item-phone">📍 ${c.address}</div>` : ''}
+          </div>
+          <button type="button" class="ag-item-del" onclick="deleteAgendaContact(${realIndex}, event)" title="Borrar contacto">🗑️</button>
+        </div>`;
+    }).join('');
+  }
+  window.renderAgendaList = renderAgendaList;
+
+  function selectAgendaContact(index){
+    if(!agendaTarget) return;
+    const contacts = getAgendaContacts();
+    const c = contacts[index];
+    if(!c) return;
+    const { orderId, kind } = agendaTarget;
+    if(kind === 'repartidor'){
+      document.getElementById(`repartidor_code_${orderId}`).value = c.code;
+      document.getElementById(`repartidor_${orderId}`).value = c.phone;
+      saveRepartidorCode(orderId, c.code);
+      saveRepartidorPhone(orderId, c.phone);
+    } else if(kind === 'recogida'){
+      document.getElementById(`recogida_code_${orderId}`).value = c.code;
+      document.getElementById(`recogida_${orderId}`).value = c.phone;
+      saveRecogidaCode(orderId, c.code);
+      saveRecogidaPhone(orderId, c.phone);
+      if(c.address){
+        const addrInput = document.getElementById(`proveedor_dir_${orderId}`);
+        if(addrInput) addrInput.value = c.address;
+        saveProveedorDireccion(orderId, c.address);
+        const locBtn = document.getElementById(`locationBtn_${orderId}`);
+        if(locBtn) locBtn.classList.add('has-location');
+      }
+      if(c.name){
+        const nombreInput = document.getElementById(`proveedor_nombre_${orderId}`);
+        if(nombreInput) nombreInput.value = c.name;
+        saveProveedorNombre(orderId, c.name);
+      }
+    } else if(kind === 'proveedor'){
+      document.getElementById(`proveedor_tel_code_${orderId}`).value = c.code;
+      document.getElementById(`proveedor_tel_${orderId}`).value = c.phone;
+      saveProveedorTelCode(orderId, c.code);
+      saveProveedorTel(orderId, c.phone);
+      if(c.address){
+        const addrInput = document.getElementById(`proveedor_dir_${orderId}`);
+        if(addrInput) addrInput.value = c.address;
+        saveProveedorDireccion(orderId, c.address);
+        const locBtn = document.getElementById(`locationBtn_${orderId}`);
+        if(locBtn) locBtn.classList.add('has-location');
+      }
+      if(c.name){
+        const nombreInput = document.getElementById(`proveedor_nombre_${orderId}`);
+        if(nombreInput) nombreInput.value = c.name;
+        saveProveedorNombre(orderId, c.name);
+      }
+    }
+    closeAgenda();
+  }
+  window.selectAgendaContact = selectAgendaContact;
+
+  function addAgendaContact(){
+    const name = document.getElementById('agContactName').value.trim();
+    const code = document.getElementById('agContactCode').value || '212';
+    const phoneRaw = document.getElementById('agContactPhone').value.trim();
+    const address = document.getElementById('agContactAddress').value.trim();
+    const digits = phoneRaw.replace(/[^0-9]/g,'');
+    if(!name){ alert('Escribe el nombre y apellido del contacto.'); return; }
+    if(digits.length < 9){ alert('El número debe tener 9 dígitos.'); return; }
+    const contacts = getAgendaContacts();
+    contacts.push({ name, code, phone: digits, address });
+    saveAgendaContacts(contacts);
+    document.getElementById('agContactName').value = '';
+    document.getElementById('agContactPhone').value = '';
+    document.getElementById('agContactAddress').value = '';
+    renderAgendaList(document.getElementById('agendaSearchInput').value);
+  }
+  window.addAgendaContact = addAgendaContact;
+
+  function deleteAgendaContact(index, evt){
+    if(evt) evt.stopPropagation();
+    const ok = window.confirm('¿Borrar este contacto de la agenda? Esta acción no se puede deshacer.');
+    if(!ok) return;
+    const contacts = getAgendaContacts();
+    contacts.splice(index, 1);
+    saveAgendaContacts(contacts);
+    renderAgendaList(document.getElementById('agendaSearchInput').value);
+  }
+  window.deleteAgendaContact = deleteAgendaContact;
+
+  // ===== WhatsApp al repartidor (entrega al cliente) =====
+  let currentOrders = []; // últimos pedidos cargados, para poder armar el mensaje al repartidor
+  let selectedOrders = new Set(); // ids de pedidos marcados con el cuadro de selección
+  let lastRenderedList = []; // últimos pedidos mostrados en pantalla (con o sin filtro de búsqueda)
+
+  function repartidorKey(orderId){
+    return `petra_repartidor_phone_${orderId}`;
+  }
+  function getRepartidorPhone(orderId){
+    return localStorage.getItem(repartidorKey(orderId)) || '';
+  }
+  function saveRepartidorPhone(orderId, value){
+    const v = (value || '').trim();
+    const digits = v.replace(/[^0-9]/g,'');
+    localStorage.setItem(repartidorKey(orderId), digits.length >= 6 ? v : '');
+  }
+  window.saveRepartidorPhone = saveRepartidorPhone;
+
+  function repartidorCodeKey(orderId){
+    return `petra_repartidor_code_${orderId}`;
+  }
+  function getRepartidorCode(orderId){
+    return localStorage.getItem(repartidorCodeKey(orderId)) || '212';
+  }
+  function saveRepartidorCode(orderId, value){
+    localStorage.setItem(repartidorCodeKey(orderId), value || '212');
+  }
+  window.saveRepartidorCode = saveRepartidorCode;
+
+  // ===== Repartidor de RECOGIDA (proveedor -> almacén) =====
+  const WAREHOUSE_ADDRESS = 'Almacén Petra Tex, Tetuán'; // 📌 cambia esto por la dirección real de tu almacén
+
+  function recogidaKey(orderId){
+    return `petra_recogida_phone_${orderId}`;
+  }
+  function getRecogidaPhone(orderId){
+    return localStorage.getItem(recogidaKey(orderId)) || '';
+  }
+  function saveRecogidaPhone(orderId, value){
+    const v = (value || '').trim();
+    const digits = v.replace(/[^0-9]/g,'');
+    localStorage.setItem(recogidaKey(orderId), digits.length >= 6 ? v : '');
+  }
+  window.saveRecogidaPhone = saveRecogidaPhone;
+
+  function recogidaCodeKey(orderId){
+    return `petra_recogida_code_${orderId}`;
+  }
+  function getRecogidaCode(orderId){
+    return localStorage.getItem(recogidaCodeKey(orderId)) || '212';
+  }
+  function saveRecogidaCode(orderId, value){
+    localStorage.setItem(recogidaCodeKey(orderId), value || '212');
+  }
+  window.saveRecogidaCode = saveRecogidaCode;
+
+  // ===== Teléfono del proveedor y descripción del pedido a preparar =====
+  function proveedorTelKey(orderId){
+    return `petra_proveedor_tel_${orderId}`;
+  }
+  function getProveedorTel(orderId){
+    const saved = localStorage.getItem(proveedorTelKey(orderId));
+    if(saved) return saved;
+    const order = currentOrders.find(o => o.id === orderId);
+    const prod = getProductProveedor(order);
+    return (prod && prod.proveedor_telefono) || '';
+  }
+  function saveProveedorTel(orderId, value){
+    const v = (value || '').trim();
+    const digits = v.replace(/[^0-9]/g,'');
+    localStorage.setItem(proveedorTelKey(orderId), digits.length >= 6 ? v : '');
+  }
+  window.saveProveedorTel = saveProveedorTel;
+
+  function proveedorTelCodeKey(orderId){
+    return `petra_proveedor_tel_code_${orderId}`;
+  }
+  function getProveedorTelCode(orderId){
+    return localStorage.getItem(proveedorTelCodeKey(orderId)) || '212';
+  }
+  function saveProveedorTelCode(orderId, value){
+    localStorage.setItem(proveedorTelCodeKey(orderId), value || '212');
+  }
+  window.saveProveedorTelCode = saveProveedorTelCode;
+
+  function proveedorNombreKey(orderId){
+    return `petra_proveedor_nombre_${orderId}`;
+  }
+  function getProveedorNombre(orderId){
+    const saved = localStorage.getItem(proveedorNombreKey(orderId));
+    if(saved) return saved;
+    const order = currentOrders.find(o => o.id === orderId);
+    const prod = getProductProveedor(order);
+    return (prod && prod.proveedor_empresa) || '';
+  }
+  function saveProveedorNombre(orderId, value){
+    localStorage.setItem(proveedorNombreKey(orderId), (value || '').trim());
+  }
+  window.saveProveedorNombre = saveProveedorNombre;
+
+  function proveedorPersonaKey(orderId){
+    return `petra_proveedor_persona_${orderId}`;
+  }
+  function getProveedorPersona(orderId){
+    const saved = localStorage.getItem(proveedorPersonaKey(orderId));
+    if(saved) return saved;
+    const order = currentOrders.find(o => o.id === orderId);
+    const prod = getProductProveedor(order);
+    return (prod && prod.proveedor_nombre) || '';
+  }
+  function saveProveedorPersona(orderId, value){
+    localStorage.setItem(proveedorPersonaKey(orderId), (value || '').trim());
+  }
+  window.saveProveedorPersona = saveProveedorPersona;
+
+  function proveedorDirKey(orderId){
+    return `petra_proveedor_direccion_${orderId}`;
+  }
+  function getProveedorDireccion(orderId){
+    const saved = localStorage.getItem(proveedorDirKey(orderId));
+    if(saved) return saved;
+    const order = currentOrders.find(o => o.id === orderId);
+    const prod = getProductProveedor(order);
+    return (prod && prod.proveedor_direccion) || '';
+  }
+  function saveProveedorDireccion(orderId, value){
+    localStorage.setItem(proveedorDirKey(orderId), (value || '').trim());
+  }
+  window.saveProveedorDireccion = saveProveedorDireccion;
+
+  // ===== Estado "enviado" de cada botón lateral (repartidor, recogida, proveedor) =====
+  function sentFlagKey(kind, orderId){
+    return `petra_sent_${kind}_${orderId}`;
+  }
+  function getSentFlag(kind, orderId){
+    return localStorage.getItem(sentFlagKey(kind, orderId)) === '1';
+  }
+  function showSentBanner(orderId){
+    const order = currentOrders.find(o => o.id === orderId);
+    const allSent = !!(order && order.notified &&
+      (getSentFlag('repartidor', orderId) || getSentFlag('recogida', orderId)) &&
+      getSentFlag('proveedor', orderId));
+    const banner = document.getElementById(`sentBanner_${orderId}`);
+    if(banner) banner.classList.toggle('show', allSent);
+  }
+  function markSentFlag(kind, orderId){
+    localStorage.setItem(sentFlagKey(kind, orderId), '1');
+    if(!localStorage.getItem(sentTimeKey(kind, orderId))){
+      localStorage.setItem(sentTimeKey(kind, orderId), String(Date.now()));
+    }
+    const btn = document.getElementById(`sendBtn_${kind}_${orderId}`);
+    if(btn) btn.classList.add('sent');
+    startSentTimer(kind, orderId);
+  }
+
+  // ===== Contador de tiempo transcurrido desde que se pulsó cada botón de envío =====
+  function sentTimeKey(kind, orderId){
+    return `petra_sent_time_${kind}_${orderId}`;
+  }
+  function formatElapsed(ms){
+    const totalSec = Math.max(0, Math.floor(ms / 1000));
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    const pad = n => String(n).padStart(2, '0');
+    return `${pad(h)}:${pad(m)}:${pad(s)}`;
+  }
+  const activeSentTimers = {}; // guarda los setInterval activos para no duplicarlos
+  function startSentTimer(kind, orderId){
+    const key = `${kind}_${orderId}`;
+    const el = document.getElementById(`sentTimer_${key}`);
+    if(!el) return;
+    const startTime = Number(localStorage.getItem(sentTimeKey(kind, orderId)));
+    if(!startTime){ el.classList.remove('show'); return; }
+    el.classList.add('show');
+    if(activeSentTimers[key]) clearInterval(activeSentTimers[key]);
+    const tick = () => { el.textContent = `⏱ ${formatElapsed(Date.now() - startTime)}`; };
+    tick();
+    activeSentTimers[key] = setInterval(tick, 1000);
+  }
+  function startAllSentTimers(orderIds){
+    ['repartidor', 'recogida', 'proveedor'].forEach(kind => {
+      orderIds.forEach(id => startSentTimer(kind, id));
+    });
+  }
+
+  function openProveedorMap(orderId){
+    const input = document.getElementById(`proveedor_dir_${orderId}`);
+    const address = input ? input.value.trim() : getProveedorDireccion(orderId);
+    if(!address){
+      alert('Escribe primero la dirección del proveedor para verlo en el mapa.');
+      return;
+    }
+    saveProveedorDireccion(orderId, address);
+    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, '_blank', 'noopener');
+  }
+  window.openProveedorMap = openProveedorMap;
+
+  // ===== Buscador de ubicación del proveedor (con sugerencias, tipo autocompletado) =====
+  const LOCATION_TEXTS = {
+    es: { title:'📍 Buscar ubicación del proveedor', placeholder:'Escribe el nombre del lugar o dirección…', hint:'Escribe al menos 3 letras para ver sugerencias.', loading:'Buscando…', empty:'No se han encontrado lugares. Prueba con otro nombre.', error:'No se pudo buscar. Comprueba tu conexión e inténtalo de nuevo.' },
+    en: { title:'📍 Search supplier location', placeholder:'Type the place name or address…', hint:'Type at least 3 letters to see suggestions.', loading:'Searching…', empty:'No places found. Try another name.', error:'Search failed. Check your connection and try again.' },
+    fr: { title:'📍 Rechercher le lieu du fournisseur', placeholder:'Tapez le nom du lieu ou l\'adresse…', hint:'Tapez au moins 3 lettres pour voir des suggestions.', loading:'Recherche…', empty:'Aucun lieu trouvé. Essayez un autre nom.', error:'Échec de la recherche. Vérifiez votre connexion et réessayez.' },
+    ar: { title:'📍 البحث عن موقع المورد', placeholder:'اكتب اسم المكان أو العنوان…', hint:'اكتب 3 أحرف على الأقل لعرض الاقتراحات.', loading:'جارٍ البحث…', empty:'لم يتم العثور على أماكن. جرّب اسماً آخر.', error:'تعذّر البحث. تحقق من اتصالك وحاول مرة أخرى.' },
+  };
+  const locationOverlay = document.getElementById('locationOverlay');
+  const locationTitle = document.getElementById('locationTitle');
+  const locationSearchInput = document.getElementById('locationSearchInput');
+  const locationResults = document.getElementById('locationResults');
+  const locationCloseBtn = document.getElementById('locationCloseBtn');
+  let currentLocationOrderId = null;
+  let currentLocationLang = 'es';
+  let locationSearchTimer = null;
+  let locationSearchSeq = 0;
+
+  function openLocationSearch(orderId){
+    currentLocationOrderId = orderId;
+    const order = currentOrders.find(o => o.id === orderId);
+    const lang = (order && order.lang && LOCATION_TEXTS[order.lang]) ? order.lang : 'es';
+    currentLocationLang = lang;
+    const t = LOCATION_TEXTS[lang];
+    const isRtl = lang === 'ar';
+    locationOverlay.querySelector('.location-box').setAttribute('dir', isRtl ? 'rtl' : 'ltr');
+    locationTitle.textContent = t.title;
+    locationSearchInput.placeholder = t.placeholder;
+    locationSearchInput.value = '';
+    locationResults.innerHTML = `<div class="loc-hint">${t.hint}</div>`;
+    locationOverlay.classList.add('show');
+    setTimeout(() => locationSearchInput.focus(), 50);
+  }
+  window.openLocationSearch = openLocationSearch;
+
+  function closeLocationSearch(){
+    locationOverlay.classList.remove('show');
+    currentLocationOrderId = null;
+    if(locationSearchTimer) clearTimeout(locationSearchTimer);
+  }
+  if(locationCloseBtn) locationCloseBtn.addEventListener('click', closeLocationSearch);
+  if(locationOverlay) locationOverlay.addEventListener('click', (e) => { if(e.target === locationOverlay) closeLocationSearch(); });
+
+  async function runLocationSearch(query){
+    const seq = ++locationSearchSeq;
+    const t = LOCATION_TEXTS[currentLocationLang] || LOCATION_TEXTS.es;
+    locationResults.innerHTML = `<div class="loc-loading">${t.loading}</div>`;
+    try{
+      const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&accept-language=${currentLocationLang}&countrycodes=ma&q=${encodeURIComponent(query)}`;
+      const res = await fetch(url);
+      const results = await res.json();
+      if(seq !== locationSearchSeq) return; // respuesta antigua, ignorar
+      if(!results || !results.length){
+        locationResults.innerHTML = `<div class="loc-empty">${t.empty}</div>`;
+        return;
+      }
+      locationResults.innerHTML = results.map((r, i) => `
+        <div class="loc-result-item" data-index="${i}" dir="auto">📍 ${r.display_name}</div>
+      `).join('');
+      locationResults.querySelectorAll('.loc-result-item').forEach(el => {
+        el.addEventListener('click', () => {
+          const idx = parseInt(el.getAttribute('data-index'), 10);
+          selectLocationResult(results[idx]);
+        });
+      });
+    }catch(err){
+      if(seq !== locationSearchSeq) return;
+      locationResults.innerHTML = `<div class="loc-empty">${t.error}</div>`;
+    }
+  }
+
+  if(locationSearchInput){
+    locationSearchInput.addEventListener('input', () => {
+      const q = locationSearchInput.value.trim();
+      if(locationSearchTimer) clearTimeout(locationSearchTimer);
+      if(q.length < 3){
+        const t = LOCATION_TEXTS[currentLocationLang] || LOCATION_TEXTS.es;
+        locationResults.innerHTML = `<div class="loc-hint">${t.hint}</div>`;
+        return;
+      }
+      locationSearchTimer = setTimeout(() => runLocationSearch(q), 450);
+    });
+  }
+
+  function selectLocationResult(result){
+    const orderId = currentLocationOrderId;
+    if(!orderId) return;
+    const address = result.display_name;
+    const addrInput = document.getElementById(`proveedor_dir_${orderId}`);
+    if(addrInput) addrInput.value = address;
+    saveProveedorDireccion(orderId, address);
+    const btn = document.getElementById(`locationBtn_${orderId}`);
+    if(btn) btn.classList.add('has-location');
+    closeLocationSearch();
+    // Enviar automáticamente al repartidor de recogida por WhatsApp
+    sendOrderToRecogida(orderId);
+  }
+
+  function waRecogidaMessage(order, proveedorNombre, proveedorPersona, proveedorAddress, proveedorTelFull){
+    const itemsText = (order.items || []).map((i, idx) => `${idx + 1}. [${i.code || productCode(i.id)}] ${i.name}${i.color ? ' / ' + i.color : ''}${i.size ? ' / ' + i.size : ''} x${i.qty}`).join('\n');
+    const nombreLine = [proveedorNombre, proveedorPersona].filter(Boolean).join(' — ');
+    const nombreLineText = nombreLine ? `🏢 ${nombreLine}\n` : '';
+    const telLineAr = proveedorTelFull ? `📞 ${proveedorTelFull}\n` : '';
+    const telLineFr = proveedorTelFull ? `📞 ${proveedorTelFull}\n` : '';
+    const ubicacionAr = `📍 الاستلام من: ${proveedorAddress || '(أضف عنوان المورد)'}\n`;
+    const ubicacionFr = `📍 À récupérer chez : ${proveedorAddress || '(ajoutez l\'adresse du fournisseur)'}\n`;
+    const ar = `🏭 استلام طلبية من المورد\n\n` +
+      `🔢 رقم الطلب: ${orderCode(order)}\n` +
+      nombreLineText +
+      telLineAr +
+      ubicacionAr +
+      `🏬 التوصيل إلى: ${WAREHOUSE_ADDRESS}\n\n` +
+      `🧾 الطلبية:\n${itemsText || '—'}`;
+    const fr = `🏭 Collecte de commande chez le fournisseur\n\n` +
+      `🔢 Commande n° ${orderCode(order)}\n` +
+      nombreLineText +
+      telLineFr +
+      ubicacionFr +
+      `🏬 À livrer à : ${WAREHOUSE_ADDRESS}\n\n` +
+      `🧾 Commande :\n${itemsText || '—'}`;
+    return `${ar}\n\n———\n\n${fr}`;
+  }
+
+  function sendOrderToRecogida(orderId){
+    const input = document.getElementById(`recogida_${orderId}`);
+    const codeSelect = document.getElementById(`recogida_code_${orderId}`);
+    const code = codeSelect ? codeSelect.value : getRecogidaCode(orderId);
+    const phone = input ? input.value.trim() : getRecogidaPhone(orderId);
+    const phoneDigits = phone.replace(/[^0-9]/g,'');
+    if(!phone || phoneDigits.length < 6){
+      alert(`Escribe el número completo del repartidor de recogida (después del +${code}) en este pedido.`);
+      return;
+    }
+    saveRecogidaPhone(orderId, phone);
+    saveRecogidaCode(orderId, code);
+    const order = currentOrders.find(o => o.id === orderId);
+    if(!order) return;
+    const nombreInput = document.getElementById(`proveedor_nombre_${orderId}`);
+    const proveedorNombre = nombreInput ? nombreInput.value.trim() : getProveedorNombre(orderId);
+    const personaInput = document.getElementById(`proveedor_persona_${orderId}`);
+    const proveedorPersona = personaInput ? personaInput.value.trim() : getProveedorPersona(orderId);
+    const addrInput = document.getElementById(`proveedor_dir_${orderId}`);
+    const proveedorAddress = addrInput ? addrInput.value.trim() : getProveedorDireccion(orderId);
+    const telInput = document.getElementById(`proveedor_tel_${orderId}`);
+    const proveedorTel = telInput ? telInput.value.trim() : getProveedorTel(orderId);
+    const telCodeSelect = document.getElementById(`proveedor_tel_code_${orderId}`);
+    const proveedorTelCode = telCodeSelect ? telCodeSelect.value : getProveedorTelCode(orderId);
+    const proveedorTelFull = proveedorTel ? `+${proveedorTelCode} ${proveedorTel}` : '';
+    const waUrl = `https://wa.me/${code}${phoneDigits}?text=${encodeURIComponent(waRecogidaMessage(order, proveedorNombre, proveedorPersona, proveedorAddress, proveedorTelFull))}`;
+    window.open(waUrl, '_blank', 'noopener');
+    markSentFlag('recogida', orderId);
+    showSentBanner(orderId);
+  }
+  window.sendOrderToRecogida = sendOrderToRecogida;
+
+  function waProveedorMessage(order){
+    const itemsText = (order.items || []).map((i, idx) => `${idx + 1}. [${i.code || productCode(i.id)}] ${i.name}${i.color ? ' / ' + i.color : ''}${i.size ? ' / ' + i.size : ''} x${i.qty}`).join('\n');
+    const ar = `👋 مرحباً، نحن من متجر *PETRA*.\n\n` +
+      `🔢 رقم الطلب: ${orderCode(order)}\n\n` +
+      `🧾 المنتجات المطلوبة:\n${itemsText || '—'}\n\n` +
+      `🙏 برجاء تجهيزها في أقرب وقت ممكن. سيمر مندوب التوصيل لاستلامها قريباً.\n\n` +
+      `شكراً على مساعدتكم! 🧡`;
+    const fr = `👋 Bonjour, nous sommes de *PETRA*.\n\n` +
+      `🔢 Commande n° ${orderCode(order)}\n\n` +
+      `🧾 Produits commandés :\n${itemsText || '—'}\n\n` +
+      `🙏 Merci de la préparer dès que possible. Notre livreur passera bientôt la récupérer.\n\n` +
+      `Merci pour votre aide ! 🧡`;
+    return `${ar}\n\n———\n\n${fr}`;
+  }
+
+  function sendMessageToProveedor(orderId){
+    const input = document.getElementById(`proveedor_tel_${orderId}`);
+    const codeSelect = document.getElementById(`proveedor_tel_code_${orderId}`);
+    const code = codeSelect ? codeSelect.value : getProveedorTelCode(orderId);
+    const phone = input ? input.value.trim() : getProveedorTel(orderId);
+    const phoneDigits = phone.replace(/[^0-9]/g,'');
+    if(!phone || phoneDigits.length < 6){
+      alert(`Escribe el número completo del proveedor (después del +${code}) en este pedido.`);
+      return;
+    }
+    saveProveedorTel(orderId, phone);
+    saveProveedorTelCode(orderId, code);
+    const order = currentOrders.find(o => o.id === orderId);
+    if(!order) return;
+    const waUrl = `https://wa.me/${code}${phoneDigits}?text=${encodeURIComponent(waProveedorMessage(order))}`;
+    window.open(waUrl, '_blank', 'noopener');
+    markSentFlag('proveedor', orderId);
+    showSentBanner(orderId);
+  }
+  window.sendMessageToProveedor = sendMessageToProveedor;
+
+  function waRepartidorMessage(order){
+    const itemsText = (order.items || []).map((i, idx) => `${idx + 1}. [${i.code || productCode(i.id)}] ${i.name}${i.color ? ' / ' + i.color : ''}${i.size ? ' / ' + i.size : ''} x${i.qty}`).join('\n');
+    const clientName = [order.first_name, order.last_name].filter(Boolean).join(' ') || '—';
+    const ar = `📦 طلبية جديدة للتوصيل\n` +
+      `🔢 رقم الطلب: ${orderCode(order)}\n` +
+      `👤 ${clientName}\n` +
+      `📞 ${order.phone || '—'}\n` +
+      `📍 ${order.address || '—'}\n\n` +
+      `🧾 الطلبية:\n${itemsText || '—'}\n\n` +
+      `💰 المبلغ الواجب تحصيله: ${order.total} درهم`;
+    const fr = `📦 Nouvelle commande à livrer\n` +
+      `🔢 Commande n° ${orderCode(order)}\n` +
+      `👤 ${clientName}\n` +
+      `📞 ${order.phone || '—'}\n` +
+      `📍 ${order.address || '—'}\n\n` +
+      `🧾 Commande :\n${itemsText || '—'}\n\n` +
+      `💰 Montant à encaisser : ${order.total} DH`;
+    return `${ar}\n\n———\n\n${fr}`;
+  }
+
+  function sendOrderToRepartidor(orderId){
+    const input = document.getElementById(`repartidor_${orderId}`);
+    const codeSelect = document.getElementById(`repartidor_code_${orderId}`);
+    const code = codeSelect ? codeSelect.value : getRepartidorCode(orderId);
+    const phone = input ? input.value.trim() : getRepartidorPhone(orderId);
+    const phoneDigits = phone.replace(/[^0-9]/g,'');
+    if(!phone || phoneDigits.length < 6){
+      alert(`Escribe el número completo del repartidor (después del +${code}) en este pedido.`);
+      return;
+    }
+    saveRepartidorPhone(orderId, phone);
+    saveRepartidorCode(orderId, code);
+    const order = currentOrders.find(o => o.id === orderId);
+    if(!order) return;
+    const waUrl = `https://wa.me/${code}${phoneDigits}?text=${encodeURIComponent(waRepartidorMessage(order))}`;
+    window.open(waUrl, '_blank', 'noopener');
+    markSentFlag('repartidor', orderId);
+    showSentBanner(orderId);
+  }
+  window.sendOrderToRepartidor = sendOrderToRepartidor;
+
+  // ===== Recibo del pedido =====
+  function buildReceiptHtml(order){
+    const fecha = new Date(order.created_at).toLocaleString('es-ES', {dateStyle:'long', timeStyle:'short'});
+    const clientName = escHtml([order.first_name, order.last_name].filter(Boolean).join(' ') || '—');
+    const itemsRows = (order.items || []).map((i, idx) => `
+      <tr>
+        <td>${idx + 1}. [${escHtml(i.code || productCode(i.id))}] ${escHtml(i.name)}${i.color ? ' / ' + escHtml(i.color) : ''}${i.size ? ' / ' + escHtml(i.size) : ''}</td>
+        <td style="text-align:center;">${i.qty}</td>
+      </tr>`).join('');
+    return `
+  <div class="receipt-inner">
+    <div class="r-header">
+      <div class="r-mark">
+        <svg viewBox="0 0 48 48" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 15h14l-1.4 15.5a2 2 0 0 1-2 1.8H12.4a2 2 0 0 1-2-1.8L9 15z" fill="#fff" opacity=".85"/>
+          <path d="M13 15v-2.5a3 3 0 0 1 3-3h1a3 3 0 0 1 3 3V15" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>
+          <path d="M20 20h16l-1.6 17.5a2 2 0 0 1-2 1.8H23.6a2 2 0 0 1-2-1.8L20 20z" fill="#fff"/>
+          <path d="M24.5 20v-2.8a3.5 3.5 0 0 1 3.5-3.5h1a3.5 3.5 0 0 1 3.5 3.5V20" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="r-name">PETRA</div>
+    </div>
+    <div class="r-sub">Recibo de pedido</div>
+    <div class="r-row"><span class="r-label">Nº de pedido</span><span class="r-val">${orderCode(order)}</span></div>
+    <div class="r-row"><span class="r-label">Fecha y hora</span><span class="r-val">${fecha}</span></div>
+    <div class="r-divider"></div>
+    <div class="r-row"><span class="r-label">Cliente</span><span class="r-val">${clientName}</span></div>
+    <div class="r-row"><span class="r-label">Teléfono</span><span class="r-val">${escHtml(order.phone) || '—'}</span></div>
+    <div class="r-row"><span class="r-label">Dirección</span><span class="r-val">${escHtml(order.address) || '—'}</span></div>
+    <div class="r-divider"></div>
+    <table>
+      <thead><tr><th>Artículo</th><th style="text-align:center;">Cant.</th></tr></thead>
+      <tbody>${itemsRows}</tbody>
+    </table>
+    <div class="r-divider"></div>
+    <div class="r-total"><span>Total a pagar</span><span class="amount">${order.total} DH</span></div>
+    <div class="r-footer">¡Gracias por tu compra!</div>
+    <button type="button" class="receipt-print-btn" onclick="printReceiptWithAnimation()">🖨️ Imprimir recibo</button>
+  </div>`;
+  }
+
+  function printReceiptWithAnimation(){
+    const inner = document.querySelector('#receiptContent .receipt-inner');
+    const printerIcon = document.getElementById('printerIcon');
+    if(inner) inner.classList.add('printing');
+    if(printerIcon) printerIcon.classList.add('active');
+    setTimeout(() => {
+      if(inner) inner.classList.remove('printing');
+      if(printerIcon) printerIcon.classList.remove('active');
+      setTimeout(() => window.print(), 50);
+    }, 650);
+  }
+  window.printReceiptWithAnimation = printReceiptWithAnimation;
+
+  function openReceipt(orderId){
+    const order = currentOrders.find(o => o.id === orderId);
+    if(!order) return;
+    receiptContent.innerHTML = buildReceiptHtml(order);
+    receiptOverlay.classList.add('show');
+  }
+  window.openReceipt = openReceipt;
+
+  function closeReceiptModal(){
+    receiptOverlay.classList.remove('show');
+    receiptContent.innerHTML = '';
+  }
+  if(receiptCloseBtn) receiptCloseBtn.addEventListener('click', closeReceiptModal);
+  if(receiptOverlay) receiptOverlay.addEventListener('click', (e) => { if(e.target === receiptOverlay) closeReceiptModal(); });
+
+  async function loadOrdersList(){
+    const tr0 = (typeof t === 'function') ? t : (k)=>k;
+    ordersList.innerHTML = tr0('loading_orders');
+    const { data, error } = await supabaseClient.from('orders').select('*').order('created_at', { ascending: false }).limit(50);
+    if(error){
+      ordersList.innerHTML = `<div class="orders-empty">${tr0('orders_load_error')}<br>${error.message || ''}</div>`;
+      return;
+    }
+    currentOrders = data || [];
+    selectedOrders.clear();
+    await loadProductsProveedorMap();
+    const searchInput = document.getElementById('orderSearchInput');
+    if(searchInput) searchInput.value = '';
+    renderOrderCards(currentOrders);
+  }
+  window.loadOrdersList = loadOrdersList;
+
+  // ===== Datos del proveedor guardados por prenda en el panel de administración =====
+  let productsProveedorMap = {};
+  async function loadProductsProveedorMap(){
+    const { data, error } = await supabaseClient.from('products').select('*');
+    if(error){ console.error('Error cargando datos de las prendas:', error); return; }
+    productsProveedorMap = {};
+    (data || []).forEach(p => { productsProveedorMap[p.id] = p; });
+  }
+
+  function getProductProveedor(order){
+    const firstItem = (order && order.items && order.items[0]) || null;
+    if(!firstItem) return null;
+    return productsProveedorMap[firstItem.id] || null;
+  }
+
+  // Busca el campo de imagen del producto entre los nombres más habituales,
+  // sea cual sea el que se use en la tabla "products".
+  const IMAGE_FIELD_CANDIDATES = ['image','image_url','imagen','foto','photo_url','img_url','img','picture','picture_url','photo','imagen_url','thumbnail','thumbnail_url'];
+  function getProductImageUrl(order){
+    const prod = getProductProveedor(order);
+    if(!prod) return null;
+    for(const field of IMAGE_FIELD_CANDIDATES){
+      const val = prod[field];
+      if(typeof val === 'string' && val.trim()) return val.trim();
+    }
+    // A veces las imágenes vienen en un array (galería); usamos la primera.
+    for(const key in prod){
+      const val = prod[key];
+      if(Array.isArray(val) && val.length && typeof val[0] === 'string' && /^https?:\/\//.test(val[0])){
+        return val[0];
+      }
+    }
+    return null;
+  }
+
+  function renderOrderCards(list, isSearch){
+    const tr = (typeof t === 'function') ? t : (k)=>k;
+    lastRenderedList = list || [];
+    if(!list || !list.length){
+      ordersList.innerHTML = isSearch
+        ? `<div class="orders-empty">${tr('no_order_found')}</div>`
+        : `<div class="orders-empty">${tr('no_orders_yet')}</div>`;
+      updateBulkSelectUI();
+      return;
+    }
+    ordersList.innerHTML = list.map(o => {
+      const fecha = new Date(o.created_at).toLocaleString('es-ES', {dateStyle:'medium', timeStyle:'short'});
+      const itemsText = (o.items || []).map((i, idx) => `${idx + 1}. [${escHtml(i.code || productCode(i.id))}] ${escHtml(i.name)}${i.color ? ' / ' + escHtml(i.color) : ''}${i.size ? ' / ' + escHtml(i.size) : ''} x${i.qty}`).join('\n');
+      const clientNameRaw = [o.first_name, o.last_name].filter(Boolean).join(' ') || '—';
+      const clientName = escHtml(clientNameRaw);
+      const initials = clientNameRaw === '—' ? '?' : clientNameRaw.trim().split(/\s+/).slice(0,2).map(w => w[0]).join('').toUpperCase();
+      return `
+        <div class="o-sent-banner ${(o.notified && (getSentFlag('repartidor', o.id) || getSentFlag('recogida', o.id)) && getSentFlag('proveedor', o.id)) ? 'show' : ''}" id="sentBanner_${o.id}">✔ ${tr('already_sent')}</div>
+        <div class="order-card">
+
+          <div class="o-titlebar">
+            <div class="o-tb-left">
+              <input type="checkbox" class="o-select-checkbox" id="selectCb_${o.id}" onclick="toggleOrderSelect(${o.id}, this.checked)" ${selectedOrders.has(o.id) ? 'checked' : ''} title="Seleccionar pedido">
+              <span class="o-avatar">${initials}</span>
+              <span class="o-client-name">${clientName}</span>
+              <span class="o-date">${fecha}</span>
+            </div>
+            <div class="o-tb-right">
+              <div class="o-code-box"><b>${tr('order_number')}</b>${orderCode(o)}</div>
+              <div class="o-total-box">${o.total} DH</div>
+              <button type="button" class="o-tb-receipt-btn" onclick="openReceipt(${o.id})" title="${tr('receipt_btn')}">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 3h12v18l-2.5-1.5L13 21l-1-1.5L11 21l-2.5-1.5L6 21V3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 8h6M9 12h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="o-body">
+
+            <div class="o-section">
+              <div class="o-section-title">
+                <span class="o-sec-icon">👤</span>${tr('client_data')}
+                <button type="button" class="o-send-btn o-send-btn-title ${o.notified ? 'sent' : ''}" id="sendBtn_cliente_${o.id}" onclick="sendThankYouToClient(${o.id})" title="Enviar pedido y agradecimiento al cliente">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 3L11 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 3L14.5 21l-3.5-8L3 9.5 21 3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                </button>
+              </div>
+              <div class="o-field-grid">
+                <div class="o-field"><label>📧 ${tr('email_label')}</label><div class="o-field-value">${escHtml(o.email) || '—'}</div></div>
+                <div class="o-field"><label>📞 ${tr('phone_label')}</label><div class="o-field-value">${escHtml(o.phone) || '—'}</div></div>
+                <div class="o-field" style="grid-column:1/-1;"><label>📍 ${tr('address_label')}</label><div class="o-field-value">${escHtml(o.address) || '—'}</div></div>
+              </div>
+            </div>
+
+            <div class="o-section">
+              <div class="o-section-title"><span class="o-sec-icon">🛍️</span>${tr('order_items')}</div>
+              <div class="o-items-box">${itemsText}</div>
+            </div>
+
+            <div class="o-section">
+              <div class="o-section-title"><span class="o-sec-icon">🚚</span>${tr('delivery_section')}</div>
+              <div class="o-repartidor-row">
+                <label for="repartidor_${o.id}">📦 ${tr('delivery_to_client')}:</label>
+                <div class="o-phone-wrap">
+                  <select class="o-phone-prefix" id="repartidor_code_${o.id}" onchange="saveRepartidorCode(${o.id}, this.value)">
+                    ${countryOptionsHtml(getRepartidorCode(o.id))}
+                  </select>
+                  <input type="tel" class="o-phone-input" id="repartidor_${o.id}" placeholder="600 000 000" value="${getRepartidorPhone(o.id)}" oninput="saveRepartidorPhone(${o.id}, this.value)">
+                </div>
+                <button type="button" class="o-agenda-btn" onclick="openAgenda(${o.id}, 'repartidor')" title="Elegir de la agenda de contactos">📇</button>
+                <button type="button" class="o-send-btn ${getSentFlag('repartidor', o.id) ? 'sent' : ''}" id="sendBtn_repartidor_${o.id}" onclick="sendOrderToRepartidor(${o.id})" title="Enviar mensaje al repartidor de entrega">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 3L11 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 3L14.5 21l-3.5-8L3 9.5 21 3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                </button>
+              </div>
+              <div class="o-sent-timer" id="sentTimer_repartidor_${o.id}">⏱ 00:00:00</div>
+              <div class="o-repartidor-row">
+                <label class="o-recogida-label" for="recogida_${o.id}">🏭 ${tr('pickup_at_supplier')}:</label>
+                <div class="o-phone-wrap o-phone-wrap-recogida">
+                  <select class="o-phone-prefix" id="recogida_code_${o.id}" onchange="saveRecogidaCode(${o.id}, this.value)">
+                    ${countryOptionsHtml(getRecogidaCode(o.id))}
+                  </select>
+                  <input type="tel" class="o-phone-input" id="recogida_${o.id}" placeholder="600 000 000" value="${getRecogidaPhone(o.id)}" oninput="saveRecogidaPhone(${o.id}, this.value)">
+                </div>
+                <button type="button" class="o-agenda-btn" onclick="openAgenda(${o.id}, 'recogida')" title="Elegir de la agenda de contactos">📇</button>
+                <button type="button" class="o-location-btn ${getProveedorDireccion(o.id) ? 'has-location' : ''}" id="locationBtn_${o.id}" onclick="openLocationSearch(${o.id})" title="Buscar ubicación del proveedor y enviarla al repartidor">📍</button>
+                <button type="button" class="o-send-btn ${getSentFlag('recogida', o.id) ? 'sent' : ''}" id="sendBtn_recogida_${o.id}" onclick="sendOrderToRecogida(${o.id})" title="Enviar mensaje al repartidor de recogida">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 3L11 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 3L14.5 21l-3.5-8L3 9.5 21 3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                </button>
+              </div>
+              <div class="o-sent-timer" id="sentTimer_recogida_${o.id}">⏱ 00:00:00</div>
+            </div>
+
+            <div class="o-section">
+              <div class="o-section-title"><span class="o-sec-icon">🏭</span>${tr('supplier_section')}</div>
+              <div class="o-map-row">
+                <label class="o-recogida-label" for="proveedor_nombre_${o.id}">🏢 ${tr('company_name_label')}:</label>
+                <input type="text" class="o-repartidor-input o-recogida-input" id="proveedor_nombre_${o.id}" dir="auto" placeholder="Nombre de la empresa del proveedor" value="${getProveedorNombre(o.id)}" oninput="saveProveedorNombre(${o.id}, this.value)">
+              </div>
+              <div class="o-map-row">
+                <label class="o-recogida-label" for="proveedor_persona_${o.id}">🙍 ${tr('supplier_name_label')}:</label>
+                <input type="text" class="o-repartidor-input o-recogida-input" id="proveedor_persona_${o.id}" dir="auto" placeholder="Nombre de la persona proveedora" value="${getProveedorPersona(o.id)}" oninput="saveProveedorPersona(${o.id}, this.value)">
+              </div>
+              <div class="o-map-row">
+                <label class="o-recogida-label" for="proveedor_dir_${o.id}">📍 ${tr('address_label')}:</label>
+                <input type="text" class="o-repartidor-input o-recogida-input" id="proveedor_dir_${o.id}" dir="auto" placeholder="Dirección del proveedor" value="${getProveedorDireccion(o.id)}" oninput="saveProveedorDireccion(${o.id}, this.value)">
+              </div>
+              <div class="o-repartidor-row">
+                <label class="o-proveedor-label" for="proveedor_tel_${o.id}">📞 ${tr('supplier_phone_label')}:</label>
+                <div class="o-phone-wrap o-phone-wrap-proveedor">
+                  <select class="o-phone-prefix" id="proveedor_tel_code_${o.id}" onchange="saveProveedorTelCode(${o.id}, this.value)">
+                    ${countryOptionsHtml(getProveedorTelCode(o.id))}
+                  </select>
+                  <input type="tel" class="o-phone-input" id="proveedor_tel_${o.id}" placeholder="600 000 000" value="${getProveedorTel(o.id)}" oninput="saveProveedorTel(${o.id}, this.value)">
+                </div>
+                <button type="button" class="o-agenda-btn" onclick="openAgenda(${o.id}, 'proveedor')" title="Elegir de la agenda de contactos">📇</button>
+                <button type="button" class="o-send-btn ${getSentFlag('proveedor', o.id) ? 'sent' : ''}" id="sendBtn_proveedor_${o.id}" onclick="sendMessageToProveedor(${o.id})" title="Enviar mensaje al proveedor">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 3L11 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 3L14.5 21l-3.5-8L3 9.5 21 3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                </button>
+              </div>
+              <div class="o-sent-timer" id="sentTimer_proveedor_${o.id}">⏱ 00:00:00</div>
+            </div>
+
+          </div>
+        </div>`;
+    }).join('');
+    startAllSentTimers(list.map(o => o.id));
+    updateBulkSelectUI();
+  }
+  window.renderOrderCards = renderOrderCards;
+
+  // ===== Buscador de pedidos por número (PT-XXXX) =====
+  function filterOrders(){
+    const raw = (document.getElementById('orderSearchInput').value || '').trim().toUpperCase();
+    const query = raw.replace(/^PT-?/, '').replace(/[^A-Z0-9]/g, '');
+    if(!query){
+      renderOrderCards(currentOrders);
+      return;
+    }
+    const filtered = currentOrders.filter(o => orderCode(o).replace(/[^A-Z0-9]/g, '').includes(query));
+    renderOrderCards(filtered, true);
+  }
+  window.filterOrders = filterOrders;
+
+  // ===== Imprimir todos los pedidos cargados en una lista limpia =====
+  function printAllOrders(){
+    if(!currentOrders || !currentOrders.length){
+      alert((typeof t==='function') ? t('no_orders_to_print') : 'No hay pedidos cargados para imprimir.');
+      return;
+    }
+    const rows = currentOrders.map(o => {
+      const fecha = new Date(o.created_at).toLocaleString('es-ES', {dateStyle:'short', timeStyle:'short'});
+      const clientName = escHtml([o.first_name, o.last_name].filter(Boolean).join(' ') || '—');
+      const itemsText = (o.items || []).map(i => `[${escHtml(i.code || productCode(i.id))}] ${escHtml(i.name)}${i.color ? ' / ' + escHtml(i.color) : ''}${i.size ? ' / ' + escHtml(i.size) : ''} x${i.qty}`).join(', ');
+      const sent = !!(o.notified && (getSentFlag('repartidor', o.id) || getSentFlag('recogida', o.id)) && getSentFlag('proveedor', o.id));
+      return `
+        <tr>
+          <td>${orderCode(o)}</td>
+          <td>${fecha}</td>
+          <td>${clientName}</td>
+          <td>${escHtml(o.phone) || '—'}</td>
+          <td>${escHtml(o.address) || '—'}</td>
+          <td>${itemsText || '—'}</td>
+          <td>${o.total} DH</td>
+          <td><span class="p-status ${sent ? 'p-ok' : 'p-no'}">${sent ? '✔ Enviado' : '✘ No enviado'}</span></td>
+        </tr>`;
+    }).join('');
+
+    const totalGeneral = currentOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>PETRA - Todos los pedidos</title>
+<style>
+  *{box-sizing:border-box;font-family:"Helvetica Neue",Arial,sans-serif;}
+  body{margin:26px;color:#111;}
+  .p-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+  h1{font-size:20px;margin:0;}
+  .sub{font-size:12px;color:#666;margin-bottom:18px;}
+  table{width:100%;border-collapse:collapse;font-size:11.5px;}
+  th,td{border:1px solid #ddd;padding:7px 9px;text-align:left;vertical-align:top;}
+  th{background:#F3F1FA;font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;}
+  tr:nth-child(even) td{background:#FAFAFC;}
+  .p-status{
+    display:inline-block;
+    font-weight:800;
+    font-size:11px;
+    padding:3px 8px;
+    border-radius:999px;
+    white-space:nowrap;
+  }
+  .p-status.p-ok{background:#E4F7EC;color:#1B9A5B;}
+  .p-status.p-no{background:#FDECEC;color:#D6362B;}
+  tfoot td{
+    border:1px solid #ddd;
+    padding:9px;
+    font-weight:900;
+    font-size:13px;
+    background:#F3F1FA;
+  }
+  tfoot td.p-total-label{text-align:right;}
+  @media print{
+    body{margin:8px;}
+    @page{ margin:12mm; }
+  }
+</style>
+</head>
+<body>
+  <div class="p-header"><h1>🧡 PETRA — Todos los pedidos</h1></div>
+  <div class="sub">Generado el ${new Date().toLocaleString('es-ES')} · ${currentOrders.length} pedido${currentOrders.length === 1 ? '' : 's'}</div>
+  <table>
+    <thead>
+      <tr><th>Nº pedido</th><th>Fecha</th><th>Cliente</th><th>Teléfono</th><th>Dirección</th><th>Artículos</th><th>Total</th><th>Estado</th></tr>
+    </thead>
+    <tbody>${rows}</tbody>
+    <tfoot>
+      <tr>
+        <td class="p-total-label" colspan="6">TOTAL GENERAL</td>
+        <td colspan="2">${totalGeneral} DH</td>
+      </tr>
+    </tfoot>
+  </table>
+</body>
+</html>`;
+
+    const printWindow = window.open('', '_blank');
+    if(!printWindow){
+      alert('El navegador bloqueó la ventana de impresión. Permite las ventanas emergentes para poder imprimir.');
+      return;
+    }
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.onload = () => {
+      printWindow.focus();
+      printWindow.print();
+    };
+  }
+  window.printAllOrders = printAllOrders;
+
+  function renderOrdersTable(data){
+    const tbody = document.getElementById('ordersTableBody');
+    if(!tbody) return;
+    const countEl = document.getElementById('otCount');
+    if(countEl) countEl.textContent = `${data.length}`;
+    tbody.innerHTML = data.map(o => {
+      const fecha = new Date(o.created_at).toLocaleString('es-ES', {dateStyle:'short', timeStyle:'short'});
+      const clientName = escHtml([o.first_name, o.last_name].filter(Boolean).join(' ') || '—');
+      const sent = o.notified || getSentFlag('repartidor', o.id) || getSentFlag('recogida', o.id) || getSentFlag('proveedor', o.id);
+
+      const proveedorNombreRaw = (getProveedorNombre(o.id) || '').trim();
+      const proveedorPersonaRaw = (getProveedorPersona(o.id) || '').trim();
+      const proveedorDirRaw = (getProveedorDireccion(o.id) || '').trim();
+      const tr = (typeof t === 'function') ? t : (k)=>k;
+      const proveedorRaw = [proveedorNombreRaw, proveedorPersonaRaw, proveedorDirRaw].filter(Boolean).join(' — ');
+      const proveedorLabel = proveedorRaw || tr('unassigned');
+
+      const repCode = getRepartidorCode(o.id);
+      const repPhone = (getRepartidorPhone(o.id) || '').trim();
+      const repartidorLabel = repPhone ? `+${repCode} ${repPhone}` : tr('unassigned');
+
+      return `
+        <div class="ot-row" onclick="goToOrderCard(${o.id})">
+          <div class="ot-row-top">
+            <div class="ot-code">${orderCode(o)}</div>
+            <div class="ot-total">${o.total} DH</div>
+            <div class="ot-date">${fecha}</div>
+            <div class="ot-status ${sent ? 'sent' : 'pending'}">${sent ? '✔ '+tr('sent_status') : '● '+tr('pending_status')}</div>
+          </div>
+          <div class="ot-people">
+            <div class="ot-person is-cliente">
+              <span class="ot-person-icon">👤</span>
+              <span class="ot-person-text"><span class="ot-person-label">${tr('client_label')}</span><span class="ot-person-value">${clientName}</span></span>
+            </div>
+            <div class="ot-person is-proveedor">
+              <span class="ot-person-icon">🏭</span>
+              <span class="ot-person-text"><span class="ot-person-label">${tr('supplier_label')}</span><span class="ot-person-value ${proveedorRaw ? '' : 'empty'}">${proveedorLabel}</span></span>
+            </div>
+            <div class="ot-person is-repartidor">
+              <span class="ot-person-icon">🚚</span>
+              <span class="ot-person-text"><span class="ot-person-label">${tr('courier_label')}</span><span class="ot-person-value ${repPhone ? '' : 'empty'}">${repartidorLabel}</span></span>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function goToOrderCard(orderId){
+    const banner = document.getElementById(`sentBanner_${orderId}`);
+    const target = banner ? banner.nextElementSibling : null;
+    if(target && target.scrollIntoView){
+      target.scrollIntoView({ behavior:'smooth', block:'start' });
+      target.style.transition = 'box-shadow .3s ease';
+      target.style.boxShadow = '0 0 0 3px var(--orange)';
+      setTimeout(() => { target.style.boxShadow = ''; }, 1500);
+    }
+  }
+  window.goToOrderCard = goToOrderCard;
+
+  async function markOrderNotified(orderId){
+    await supabaseClient.from('orders').update({ notified: true }).eq('id', orderId);
+  }
+  window.markOrderNotified = markOrderNotified;
+
+  function deleteOrder(orderId){
+    const actions = document.getElementById(`oActions_${orderId}`);
+    if(!actions) return;
+    if(actions.dataset.original === undefined) actions.dataset.original = actions.innerHTML;
+    actions.innerHTML = `
+      <div class="o-del-confirm">
+        <span>¿Borrar este pedido?</span>
+        <button type="button" class="o-del-confirm-btn" onclick="confirmDeleteOrder(${orderId})">Borrar</button>
+        <button type="button" class="o-del-cancel-btn" onclick="cancelDeleteOrder(${orderId})">Cancelar</button>
+      </div>`;
+  }
+  window.deleteOrder = deleteOrder;
+
+  function cancelDeleteOrder(orderId){
+    const actions = document.getElementById(`oActions_${orderId}`);
+    if(actions && actions.dataset.original !== undefined){
+      actions.innerHTML = actions.dataset.original;
+    }
+  }
+  window.cancelDeleteOrder = cancelDeleteOrder;
+
+  async function confirmDeleteOrder(orderId){
+    const { error, data } = await supabaseClient.from('orders').delete().eq('id', orderId).select();
+    if(error){
+      console.error('Error al borrar el pedido:', error);
+      alert('No se pudo borrar el pedido.\n\nMotivo: ' + (error.message || 'desconocido') + '\n\nEsto suele pasar si en Supabase falta el permiso de "eliminar" (DELETE) en la tabla orders.');
+      return;
+    }
+    if(!data || !data.length){
+      alert('El pedido no se ha borrado. Puede que en Supabase falte el permiso de "eliminar" (DELETE) para la tabla orders (RLS).');
+      return;
+    }
+    loadOrdersList();
+  }
+  window.confirmDeleteOrder = confirmDeleteOrder;
+
+  // ===== Selección múltiple de pedidos + borrado en bloque con contraseña =====
+  function toggleOrderSelect(orderId, checked){
+    if(checked) selectedOrders.add(orderId);
+    else selectedOrders.delete(orderId);
+    updateBulkSelectUI();
+  }
+  window.toggleOrderSelect = toggleOrderSelect;
+
+  function toggleSelectAll(checked){
+    if(checked){
+      (lastRenderedList || []).forEach(o => selectedOrders.add(o.id));
+    } else {
+      (lastRenderedList || []).forEach(o => selectedOrders.delete(o.id));
+    }
+    (lastRenderedList || []).forEach(o => {
+      const cb = document.getElementById(`selectCb_${o.id}`);
+      if(cb) cb.checked = selectedOrders.has(o.id);
+    });
+    updateBulkSelectUI();
+  }
+  window.toggleSelectAll = toggleSelectAll;
+
+  function updateBulkSelectUI(){
+    const list = lastRenderedList || [];
+    const count = selectedOrders.size;
+    const btn = document.getElementById('bulkDeleteBtn');
+    const countNum = document.getElementById('bulkDeleteCountNum');
+    const selAllCb = document.getElementById('selectAllCheckbox');
+    if(btn) btn.style.display = count > 0 ? 'inline-flex' : 'none';
+    if(countNum) countNum.textContent = String(count);
+    if(selAllCb){
+      const visibleSelected = list.filter(o => selectedOrders.has(o.id)).length;
+      selAllCb.checked = list.length > 0 && visibleSelected === list.length;
+      selAllCb.indeterminate = visibleSelected > 0 && visibleSelected < list.length;
+    }
+  }
+  window.updateBulkSelectUI = updateBulkSelectUI;
+
+  const bulkDeleteOverlay = document.getElementById('bulkDeleteOverlay');
+  const bulkDeletePassword = document.getElementById('bulkDeletePassword');
+  const bulkDeleteError = document.getElementById('bulkDeleteError');
+  const bulkDeleteMsg = document.getElementById('bulkDeleteMsg');
+  const bdConfirmBtn = document.getElementById('bdConfirmBtn');
+  const bdCancelBtn = document.getElementById('bdCancelBtn');
+
+  function openBulkDeleteModal(){
+    if(!selectedOrders.size) return;
+    const n = selectedOrders.size;
+    bulkDeletePassword.value = '';
+    bulkDeleteError.classList.remove('show');
+    bulkDeleteMsg.textContent = `Vas a borrar ${n} pedido${n === 1 ? '' : 's'} seleccionado${n === 1 ? '' : 's'}. Esta acción no se puede deshacer. Escribe tu contraseña para confirmar.`;
+    bulkDeleteOverlay.classList.add('show');
+    bulkDeletePassword.focus();
+  }
+  window.openBulkDeleteModal = openBulkDeleteModal;
+
+  function closeBulkDeleteModal(){
+    bulkDeleteOverlay.classList.remove('show');
+  }
+  window.closeBulkDeleteModal = closeBulkDeleteModal;
+
+  if(bdCancelBtn) bdCancelBtn.addEventListener('click', closeBulkDeleteModal);
+  if(bulkDeleteOverlay) bulkDeleteOverlay.addEventListener('click', (e) => {
+    if(e.target === bulkDeleteOverlay) closeBulkDeleteModal();
+  });
+
+  async function confirmBulkDelete(){
+    bulkDeleteError.classList.remove('show');
+    if(!bulkDeletePassword.value){
+      bulkDeleteError.textContent = 'Escribe tu contraseña.';
+      bulkDeleteError.classList.add('show');
+      return;
+    }
+    const { data: userData } = await supabaseClient.auth.getUser();
+    const email = userData && userData.user ? userData.user.email : null;
+    if(!email){
+      bulkDeleteError.textContent = 'Tu sesión expiró. Cierra sesión y vuelve a entrar.';
+      bulkDeleteError.classList.add('show');
+      return;
+    }
+    bdConfirmBtn.disabled = true;
+    const { error: checkErr } = await supabaseClient.auth.signInWithPassword({ email, password: bulkDeletePassword.value });
+    if(checkErr){
+      bdConfirmBtn.disabled = false;
+      bulkDeleteError.textContent = 'Contraseña incorrecta.';
+      bulkDeleteError.classList.add('show');
+      return;
+    }
+    const ids = Array.from(selectedOrders);
+    const { error, data } = await supabaseClient.from('orders').delete().in('id', ids).select();
+    bdConfirmBtn.disabled = false;
+    if(error){
+      bulkDeleteError.textContent = 'No se pudieron borrar los pedidos: ' + (error.message || 'error desconocido');
+      bulkDeleteError.classList.add('show');
+      return;
+    }
+    if(!data || !data.length){
+      bulkDeleteError.textContent = 'No se borró ningún pedido. Puede que falte el permiso de eliminar (RLS) en Supabase.';
+      bulkDeleteError.classList.add('show');
+      return;
+    }
+    selectedOrders.clear();
+    closeBulkDeleteModal();
+    loadOrdersList();
+  }
+  if(bdConfirmBtn) bdConfirmBtn.addEventListener('click', confirmBulkDelete);
+  if(bulkDeletePassword) bulkDeletePassword.addEventListener('keydown', (e) => { if(e.key === 'Enter') confirmBulkDelete(); });
+
+  (async () => {
+    const { data } = await supabaseClient.auth.getSession();
+    if(data && data.session){
+      showPedidos();
+    } else {
+      showLock();
+    }
+  })();
+</script>
+
+<script>
+  // ===== Aviso automático: sonido + refresco cuando llega un pedido nuevo (en tiempo real) =====
+  function beepNewOrder(){
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [0, 220].forEach(delay => {
+        setTimeout(() => {
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.type = 'sine';
+          o.frequency.value = 880;
+          g.gain.value = 0.2;
+          o.connect(g); g.connect(ctx.destination);
+          o.start();
+          o.stop(ctx.currentTime + 0.18);
+        }, delay);
+      });
+      setTimeout(() => ctx.close(), 500);
+    }catch(e){ /* el navegador bloqueó el sonido, no pasa nada */ }
+  }
+
+  supabaseClient
+    .channel('orders-nuevo-pedido')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, () => {
+      beepNewOrder();
+      if(typeof loadOrdersList === 'function' && isAuthed) loadOrdersList();
+    })
+    .subscribe();
+</script>
+
+<script>
+  // ===================================================================
+  // ===== SISTEMA DE IDIOMAS (ES / FR / EN / AR) - cada empleado    =====
+  // ===== elige su idioma y el navegador lo recuerda (localStorage)  =====
+  // ===== Comparte la misma clave que el panel de administración,   =====
+  // ===== así el idioma elegido se mantiene entre ambas páginas.    =====
+  // ===================================================================
+  const I18N = {
+    es: {
+      lock_title: 'Acceso a Pedidos',
+      lock_hint: 'Introduce la contraseña del panel de administración.',
+      lock_error: 'Contraseña incorrecta.',
+      password_placeholder: 'Contraseña',
+      enter_btn: 'Entrar',
+      forgot_password_link: '¿Olvidaste tu contraseña? Recupérala desde el panel',
+      orders_title: '🧾 Pedidos recibidos',
+      logout_btn: '🔒 Cerrar sesión',
+      change_password_title: 'Cambiar contraseña',
+      change_password_hint: 'Introduce tu contraseña actual y la nueva contraseña.<br>Mínimo 12 caracteres, con mayúsculas, minúsculas, números y símbolos.',
+      old_password_wrong: 'Contraseña actual incorrecta.',
+      password_updated: '✓ Contraseña actualizada correctamente.',
+      old_password_placeholder: 'Contraseña antigua',
+      new_password_placeholder: 'Nueva contraseña',
+      confirm_password_placeholder: 'Confirmar nueva contraseña',
+      save_new_password: 'Guardar nueva contraseña',
+      cancel_btn: 'Cancelar',
+      search_order_placeholder: 'Buscar pedido por número (ej. 001H)',
+      print_all_btn: '🖨️ Imprimir todos los pedidos',
+      loading_orders: 'Cargando pedidos…',
+      orders_load_error: 'No se pudieron cargar los pedidos.',
+      no_order_found: 'No se encontró ningún pedido con ese número.',
+      no_orders_yet: 'Todavía no ha llegado ningún pedido.',
+      already_sent: 'Ya enviado',
+      order_number: 'Nº PEDIDO',
+      client_data: 'Datos del cliente',
+      email_label: 'Email',
+      phone_label: 'Teléfono',
+      address_label: 'Dirección',
+      order_items: 'Artículos del pedido',
+      delivery_section: 'Reparto',
+      delivery_to_client: 'Entrega al cliente',
+      pickup_at_supplier: 'Recogida en proveedor',
+      supplier_section: 'Proveedor',
+      company_name_label: 'Nombre de la empresa',
+      supplier_name_label: 'Nombre del proveedor',
+      supplier_phone_label: 'Teléfono del proveedor',
+      view_on_map: 'Ver en mapa',
+      receipt_btn: 'Recibo',
+      delete_btn: 'Borrar',
+      unassigned: 'Sin asignar',
+      sent_status: 'Enviado',
+      pending_status: 'Pendiente',
+      client_label: 'Cliente',
+      supplier_label: 'Proveedor',
+      courier_label: 'Repartidor',
+      no_orders_to_print: 'No hay pedidos cargados para imprimir.',
+      location_modal_title: '📍 Buscar ubicación del proveedor',
+      location_search_placeholder: 'Escribe el nombre del lugar o dirección…',
+      location_hint: 'Escribe al menos 3 letras para ver sugerencias.',
+      agenda_title: '📇 Agenda de contactos',
+      agenda_search_placeholder: 'Buscar por nombre…',
+      agenda_add_title: '➕ Añadir nuevo contacto',
+      agenda_name_placeholder: 'Nombre y apellido',
+      agenda_address_placeholder: 'Dirección (opcional, para proveedores)',
+      agenda_save_btn: 'Guardar en la agenda',
+    },
+    fr: {
+      lock_title: 'Accès aux commandes',
+      lock_hint: 'Entrez le mot de passe du panneau d\'administration.',
+      lock_error: 'Mot de passe incorrect.',
+      password_placeholder: 'Mot de passe',
+      enter_btn: 'Entrer',
+      forgot_password_link: 'Mot de passe oublié ? Récupérez-le depuis le panneau',
+      orders_title: '🧾 Commandes reçues',
+      logout_btn: '🔒 Se déconnecter',
+      change_password_title: 'Changer le mot de passe',
+      change_password_hint: 'Entrez votre mot de passe actuel et le nouveau mot de passe.<br>Minimum 12 caractères, avec majuscules, minuscules, chiffres et symboles.',
+      old_password_wrong: 'Mot de passe actuel incorrect.',
+      password_updated: '✓ Mot de passe mis à jour avec succès.',
+      old_password_placeholder: 'Ancien mot de passe',
+      new_password_placeholder: 'Nouveau mot de passe',
+      confirm_password_placeholder: 'Confirmer le nouveau mot de passe',
+      save_new_password: 'Enregistrer le nouveau mot de passe',
+      cancel_btn: 'Annuler',
+      search_order_placeholder: 'Rechercher une commande par numéro (ex. 001H)',
+      print_all_btn: '🖨️ Imprimer toutes les commandes',
+      loading_orders: 'Chargement des commandes…',
+      orders_load_error: 'Impossible de charger les commandes.',
+      no_order_found: 'Aucune commande trouvée avec ce numéro.',
+      no_orders_yet: 'Aucune commande n\'est encore arrivée.',
+      already_sent: 'Déjà envoyé',
+      order_number: 'N° COMMANDE',
+      client_data: 'Informations client',
+      email_label: 'E-mail',
+      phone_label: 'Téléphone',
+      address_label: 'Adresse',
+      order_items: 'Articles de la commande',
+      delivery_section: 'Livraison',
+      delivery_to_client: 'Livraison au client',
+      pickup_at_supplier: 'Collecte chez le fournisseur',
+      supplier_section: 'Fournisseur',
+      company_name_label: 'Nom de l\'entreprise',
+      supplier_name_label: 'Nom du fournisseur',
+      supplier_phone_label: 'Téléphone du fournisseur',
+      view_on_map: 'Voir sur la carte',
+      receipt_btn: 'Reçu',
+      delete_btn: 'Supprimer',
+      unassigned: 'Non assigné',
+      sent_status: 'Envoyé',
+      pending_status: 'En attente',
+      client_label: 'Client',
+      supplier_label: 'Fournisseur',
+      courier_label: 'Livreur',
+      no_orders_to_print: 'Aucune commande chargée à imprimer.',
+      location_modal_title: '📍 Rechercher l\'emplacement du fournisseur',
+      location_search_placeholder: 'Écrivez le nom du lieu ou l\'adresse…',
+      location_hint: 'Écrivez au moins 3 lettres pour voir des suggestions.',
+      agenda_title: '📇 Carnet de contacts',
+      agenda_search_placeholder: 'Rechercher par nom…',
+      agenda_add_title: '➕ Ajouter un nouveau contact',
+      agenda_name_placeholder: 'Nom et prénom',
+      agenda_address_placeholder: 'Adresse (facultatif, pour les fournisseurs)',
+      agenda_save_btn: 'Enregistrer dans le carnet',
+    },
+    en: {
+      lock_title: 'Orders access',
+      lock_hint: 'Enter the admin panel password.',
+      lock_error: 'Incorrect password.',
+      password_placeholder: 'Password',
+      enter_btn: 'Enter',
+      forgot_password_link: 'Forgot your password? Recover it from the admin panel',
+      orders_title: '🧾 Received orders',
+      logout_btn: '🔒 Log out',
+      change_password_title: 'Change password',
+      change_password_hint: 'Enter your current password and your new password.<br>Minimum 12 characters, with uppercase, lowercase, numbers and symbols.',
+      old_password_wrong: 'Current password is incorrect.',
+      password_updated: '✓ Password updated successfully.',
+      old_password_placeholder: 'Old password',
+      new_password_placeholder: 'New password',
+      confirm_password_placeholder: 'Confirm new password',
+      save_new_password: 'Save new password',
+      cancel_btn: 'Cancel',
+      search_order_placeholder: 'Search order by number (e.g. 001H)',
+      print_all_btn: '🖨️ Print all orders',
+      loading_orders: 'Loading orders…',
+      orders_load_error: 'Could not load the orders.',
+      no_order_found: 'No order found with that number.',
+      no_orders_yet: 'No orders have arrived yet.',
+      already_sent: 'Already sent',
+      order_number: 'ORDER NO.',
+      client_data: 'Customer details',
+      email_label: 'Email',
+      phone_label: 'Phone',
+      address_label: 'Address',
+      order_items: 'Order items',
+      delivery_section: 'Delivery',
+      delivery_to_client: 'Delivery to customer',
+      pickup_at_supplier: 'Pickup at supplier',
+      supplier_section: 'Supplier',
+      company_name_label: 'Company name',
+      supplier_name_label: 'Supplier name',
+      supplier_phone_label: 'Supplier phone',
+      view_on_map: 'View on map',
+      receipt_btn: 'Receipt',
+      delete_btn: 'Delete',
+      unassigned: 'Unassigned',
+      sent_status: 'Sent',
+      pending_status: 'Pending',
+      client_label: 'Customer',
+      supplier_label: 'Supplier',
+      courier_label: 'Courier',
+      no_orders_to_print: 'No orders loaded to print.',
+      location_modal_title: '📍 Search supplier location',
+      location_search_placeholder: 'Type the place name or address…',
+      location_hint: 'Type at least 3 letters to see suggestions.',
+      agenda_title: '📇 Contact book',
+      agenda_search_placeholder: 'Search by name…',
+      agenda_add_title: '➕ Add new contact',
+      agenda_name_placeholder: 'Full name',
+      agenda_address_placeholder: 'Address (optional, for suppliers)',
+      agenda_save_btn: 'Save to contact book',
+    },
+    ar: {
+      lock_title: 'الدخول إلى الطلبات',
+      lock_hint: 'أدخل كلمة مرور لوحة الإدارة.',
+      lock_error: 'كلمة المرور غير صحيحة.',
+      password_placeholder: 'كلمة المرور',
+      enter_btn: 'دخول',
+      forgot_password_link: 'هل نسيت كلمة المرور؟ استعدها من لوحة الإدارة',
+      orders_title: '🧾 الطلبات المستلمة',
+      logout_btn: '🔒 تسجيل الخروج',
+      change_password_title: 'تغيير كلمة المرور',
+      change_password_hint: 'أدخل كلمة المرور الحالية وكلمة المرور الجديدة.<br>10 أحرف على الأقل، مع أحرف كبيرة وصغيرة وأرقام ورموز.',
+      old_password_wrong: 'كلمة المرور الحالية غير صحيحة.',
+      password_updated: '✓ تم تحديث كلمة المرور بنجاح.',
+      old_password_placeholder: 'كلمة المرور القديمة',
+      new_password_placeholder: 'كلمة المرور الجديدة',
+      confirm_password_placeholder: 'تأكيد كلمة المرور الجديدة',
+      save_new_password: 'حفظ كلمة المرور الجديدة',
+      cancel_btn: 'إلغاء',
+      search_order_placeholder: 'ابحث عن طلب برقمه (مثال: 001H)',
+      print_all_btn: '🖨️ طباعة جميع الطلبات',
+      loading_orders: 'جارٍ تحميل الطلبات…',
+      orders_load_error: 'تعذر تحميل الطلبات.',
+      no_order_found: 'لم يتم العثور على طلب بهذا الرقم.',
+      no_orders_yet: 'لم يصل أي طلب بعد.',
+      already_sent: 'تم الإرسال بالفعل',
+      order_number: 'رقم الطلب',
+      client_data: 'بيانات العميل',
+      email_label: 'البريد الإلكتروني',
+      phone_label: 'الهاتف',
+      address_label: 'العنوان',
+      order_items: 'عناصر الطلب',
+      delivery_section: 'التوصيل',
+      delivery_to_client: 'التسليم للعميل',
+      pickup_at_supplier: 'الاستلام من المورد',
+      supplier_section: 'المورد',
+      company_name_label: 'اسم الشركة',
+      supplier_name_label: 'اسم المورد',
+      supplier_phone_label: 'هاتف المورد',
+      view_on_map: 'عرض على الخريطة',
+      receipt_btn: 'الإيصال',
+      delete_btn: 'حذف',
+      unassigned: 'غير محدد',
+      sent_status: 'تم الإرسال',
+      pending_status: 'قيد الانتظار',
+      client_label: 'العميل',
+      supplier_label: 'المورد',
+      courier_label: 'مندوب التوصيل',
+      no_orders_to_print: 'لا توجد طلبات محمّلة للطباعة.',
+      location_modal_title: '📍 البحث عن موقع المورد',
+      location_search_placeholder: 'اكتب اسم المكان أو العنوان…',
+      location_hint: 'اكتب 3 أحرف على الأقل لرؤية الاقتراحات.',
+      agenda_title: '📇 دفتر جهات الاتصال',
+      agenda_search_placeholder: 'ابحث بالاسم…',
+      agenda_add_title: '➕ إضافة جهة اتصال جديدة',
+      agenda_name_placeholder: 'الاسم الكامل',
+      agenda_address_placeholder: 'العنوان (اختياري، للموردين)',
+      agenda_save_btn: 'حفظ في دفتر الاتصال',
+    },
+  };
+
+  const LANG_KEY = 'petraTexLang';
+  function getLang(){ return localStorage.getItem(LANG_KEY) || 'es'; }
+  function t(key){
+    const dict = I18N[getLang()] || I18N.es;
+    return (dict && dict[key] !== undefined) ? dict[key] : (I18N.es[key] !== undefined ? I18N.es[key] : key);
+  }
+  window.t = t;
+  window.getLang = getLang;
+
+  function applyLanguage(lang){
+    if(!I18N[lang]) lang = 'es';
+    localStorage.setItem(LANG_KEY, lang);
+    document.documentElement.lang = lang;
+    document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if(I18N[lang][key] !== undefined) el.innerHTML = I18N[lang][key];
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      const key = el.getAttribute('data-i18n-placeholder');
+      if(I18N[lang][key] !== undefined) el.placeholder = I18N[lang][key];
+    });
+    document.querySelectorAll('#langSwitch button').forEach(b => {
+      b.classList.toggle('active', b.dataset.lang === lang);
+    });
+
+    // volver a pintar las tarjetas de pedidos para que también cambien de idioma
+    if(typeof currentOrders !== 'undefined' && currentOrders && currentOrders.length && typeof renderOrderCards === 'function'){
+      renderOrderCards(currentOrders);
+    }
+  }
+  window.applyLanguage = applyLanguage;
+
+  const langSwitchEl = document.getElementById('langSwitch');
+  if(langSwitchEl){
+    langSwitchEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-lang]');
+      if(!btn) return;
+      applyLanguage(btn.dataset.lang);
+    });
+  }
+
+  applyLanguage(getLang());
+</script>
+
+</body>
+</html>
